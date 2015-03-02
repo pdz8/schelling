@@ -83,6 +83,10 @@ def set_coinbase(addr):
 	r = requests.post(RPC_SERVER, data=json.dumps(skeleton))
 
 def get_accounts():
+	skeleton = '{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}'
+	r = requests.post(RPC_SERVER, data=skeleton)
+	return r.text
+def old_get_accounts():
 	skeleton = '{"jsonrpc":"2.0","method":"eth_accounts","params":null,"id":1}'
 	r = requests.post(RPC_SERVER, data=skeleton)
 	return r.text
