@@ -75,9 +75,6 @@ contract OptionBallot {
     voterMap[tx.origin].choice = voteVal;
     tally[voteVal]++;
     numTallied++;
-
-    // Recalculate reward
-    reward = address(this).balance / numTallied;
   }
 
 
@@ -98,6 +95,7 @@ contract OptionBallot {
         i++;
       }
       if (decision == 0) return;
+      reward = address(this).balance / tally[decision];
     }
 
     // Reward voter
