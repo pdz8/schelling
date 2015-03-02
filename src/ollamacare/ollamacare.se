@@ -1,0 +1,89 @@
+##############################
+# OllamaCare - Please enroll!
+##############################
+
+# Stored fields
+data insurer # 0
+data farm # 1
+data premium # 2
+data paid_premium # 3
+data last_payment # 4
+data payment_period # 5
+data payment_due # 6
+data expiration # 7
+data temp_threshold # 8
+data weather_authority # 9
+data curr_state # 10
+data reward
+
+# Executed before init and user functions
+# def shared():
+# 	1 = 1
+# 	2 = 2
+
+# Setup code to run upon submission
+def init():
+	self.insurer = msg.sender
+	self.curr_state = 1
+	self.reward = msg.value
+
+# Insurer initializes contract with needed fields
+def set_terms(farm, weather_authority, temp_threshold, premium, payment_period, num_payments):	
+	# Verify legality of action
+	if self.curr_state != 1:
+		return(0)
+	if self.insurer != msg.sender:
+		return(0)
+
+	# Store input values
+	self.farm = farm
+	self.temp_threshold = temp_threshold
+	self.weather_authority = weather_authority
+	self.premium = premium
+	self.payment_period = payment_period
+
+	# Setup payments
+	self.paid_premium = 0
+	self.last_payment = block.timestamp
+	self.expiration = self.last_payment + (num_payments * payment_period)
+	self.payment_due = self.last_payment + payment_period
+
+	# No error
+	self.curr_state = 2
+	return(1)
+
+# Submit weather update
+# curr_temp must be a Fahrenheit integer
+def weather(curr_temp):
+	if self.curr_state != 2:
+		return(0)
+	if self.weather_authority != msg.sender:
+		return(0)
+	if self.expiration < block.timestamp:
+		return(0)
+	if curr_temp <= self.temp_threshold:
+		suicide(self.farm)
+	return(1)
+
+# Make premium payment
+def pay(v):
+	if self.curr_state != 2:
+		return(0)
+	self.paid_premium += msg.value
+	if self.paid_premium >= self.premium:
+		self.paid_premium -= self.premium
+		self.payment_due += self.payment_period
+	send(self.insurer, msg.value)
+	return(1)
+
+def enforce(v):
+	if self.curr_state != 2:
+		return(0)
+	if self.insurer != msg.sender:
+		return(0)
+	if block.timestamp > self.expiration || block.timestamp > self.payment_due:
+		suicide(self.insurer)
+	return(1)
+
+def kill_me(v):
+	suicide(self.insurer)

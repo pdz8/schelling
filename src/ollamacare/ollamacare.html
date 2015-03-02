@@ -1,0 +1,215 @@
+<html>
+
+<!-- Ethereum scripts -->
+<script>
+
+// Globals
+var myaccs = web3.eth.accounts._result;
+var curr_user_acc;
+var contract_acc // current account
+
+// Prepend zeros to get u256
+function zeropad(input){
+  var output = input;
+  while (output.length < 64){
+    output = "0" + output;
+  }
+  return output;
+}
+
+// Prepend the 0x
+function addox(input){
+  if (input.substring(0,2) != "0x"){
+    input = "0x" + input;
+  }
+  return input;
+}
+function rmox(input){
+  if (input.substring(0,2) == "0x"){
+    input = input.substring(2,input.length);
+  }
+  return input;
+}
+
+// Called upon change to account selector
+function changeAcc() {
+  var i = document.getElementById('acc_select').selectedIndex;
+  curr_user_acc = myaccs[i];
+  web3.eth.balanceAt(curr_user_acc).then(function(result){
+    document.getElementById('ybal').innerText = web3.toDecimal(result) / Math.pow(10,18);
+  });
+}
+
+// Reload contract balance
+function getCBal(){
+  try{
+    var c_box = document.getElementById('contract');
+    contract_acc = addox(c_box.value);
+    c_box.value = contract_acc;
+    web3.eth.balanceAt(contract_acc).then(function(result){
+      document.getElementById('cbal').innerText = web3.toDecimal(result) / Math.pow(10,18);
+    });
+  }catch(err){}
+}
+function term_regularizer()
+{
+  document.getElementById('terms1').value = addox(document.getElementById('terms1').value);
+  document.getElementById('terms2').value = addox(document.getElementById('terms2').value);
+}
+
+// Enforce the contract
+function enforce() {
+  web3.eth.transact({
+    from: curr_user_acc,
+    to: contract_acc,
+    data: "0x33ad68d10000000000000000000000000000000000000000000000000000000000000000"
+  });
+
+}
+function killer() {
+  web3.eth.transact({
+    from: curr_user_acc,
+    to: contract_acc,
+    data: "0x640f13640000000000000000000000000000000000000000000000000000000000000000"
+  });  
+}
+function update_temp(){
+  var temperature = Number(document.getElementById('temp').value).toString(16);
+  temperature = zeropad(temperature);
+  var abi_data = "0xc5f9274c" + temperature;
+  web3.eth.transact({
+    from: curr_user_acc,
+    to: contract_acc,
+    data: abi_data
+  });
+}
+function pay_up(){
+  var payment_amnt = Number(document.getElementById('paybox').value);
+  payment_amnt = "0x" + (payment_amnt * Math.pow(10,18)).toString(16);
+  var abi_data = "0xc290d6910000000000000000000000000000000000000000000000000000000000000000";
+  web3.eth.transact({
+    from: curr_user_acc,
+    value: payment_amnt,
+    to: contract_acc,
+    data: abi_data
+  });
+}
+function set_terms(){
+  var farm_addr = zeropad(rmox(document.getElementById('terms1').value));
+  var auth_addr = zeropad(rmox(document.getElementById('terms2').value));
+  var temp_thresh = zeropad(Number(document.getElementById('terms3').value).toString(16));
+  var premium = zeropad((Number(document.getElementById('terms4').value) * Math.pow(10,18)).toString(16));
+  var period = zeropad(Number(document.getElementById('terms5').value).toString(16));
+  var n_periods = zeropad(Number(document.getElementById('terms6').value).toString(16));
+  var insure_amt = Number(document.getElementById('terms7').value) * Math.pow(10,18);
+  var abi_data = "0xfec4777c" + farm_addr + auth_addr + temp_thresh + premium + period + n_periods;
+  web3.eth.transact({
+    from: curr_user_acc,
+    value: "0x" + insure_amt.toString(16),
+    to: contract_acc,
+    data: abi_data
+  });
+}
+function create_con(){
+  var abi_data = "0x336000556001600a5534600b556102518061001b60003961026c567c01000000000000000000000000000000000000000000000000000000006000350463fec4777c8114156100d35760043560405260243560605260443560805260643560a05260843560c05260a43560e0526001600a5414151561006a576000610100526020610100f35b33600054141515610082576000610120526020610120f35b60405160015560805160085560605160095560a05160025560c05160055560006003554260045560c05160e051026004540160075560c051600454016006556002600a556001610140526020610140f35b63c5f9274c81141561014e57600435610160526002600a541415156100ff576000610180526020610180f35b336009541415156101175760006101a05260206101a0f35b42600754121561012e5760006101c05260206101c0f35b6008546101605113151561014157600154ff5b60016101e05260206101e0f35b63c290d6918114156101c357600435610200526002600a5414151561017a576000610220526020610220f35b34600354016003556002546003541215156101a45760025460035403600355600554600654016006555b60006000600060003460005460195a03f1506001610240526020610240f35b6333ad68d181141561023757600435610200526002600a541415156101ef576000610260526020610260f35b33600054141515610207576000610280526020610280f35b60075442138015610218578061021e565b60065442135b90501561022a57600054ff5b60016102c05260206102c0f35b63640f136481141561024f5760043561020052600054ff5b505b6000f3";
+  contract_acc = web3.eth.transact({
+    from: curr_user_acc,
+    data: abi_data
+  }).then(function(result){
+    contract_acc = result;
+    document.getElementById('contract').value = contract_acc;
+    getCBal();
+  });
+}
+
+
+// Non-hacky way of doing things
+window.onload = function(){
+  // Populate account selector
+  var acc_select = document.getElementById('acc_select');
+  for (var i = 0; i < myaccs.length; i++){
+    var acc_option = document.createElement("option");
+    acc_option.index = i;
+    acc_option.text = myaccs[i];
+    acc_select.add(acc_option);
+  }
+  changeAcc();
+
+  // Stuff to watch
+  web3.eth.watch().changed(function(){
+    changeAcc();
+    getCBal();
+  });
+}
+
+
+function happy(){
+}
+
+
+</script>
+
+<!-- Visual stuff -->
+<title>OllamaCare</title>
+<style></style>
+<body>
+
+<h1>OllamaCare</h1>
+<blockquote>
+<p>
+<i>Tina, you fat lard, come get some dinner </i>&mdash; Napoleon Dynamite
+</p>
+</blockquote>
+<!-- <p id="throwaway"></p> -->
+
+<br></br>
+<h2>General</h2>
+<table>
+  <tr>
+    <td>Your address:</td>
+    <td>
+      <select onchange="changeAcc()" id="acc_select"></select>
+    </td>
+  </tr>
+  <tr><td>Your balance:</td><td><var id="ybal">??</var> ether</td></tr>
+  <tr><td>Contract address:</td><td><input onchange="getCBal()" id="contract" value="0"></td></tr>
+  <tr><td>Contract balance</td><td><var id="cbal">??</var> ether</td></tr>
+</table>
+<!-- <button onclick="happy()">Happy</button> -->
+
+<br></br>
+<h2>Farm User</h2>
+<p>Amount to pay: <input id="paybox" value="0"> ether</p>
+<button onclick="pay_up()">Make Payment</button>
+
+<br></br>
+<h2>Insurer</h2>
+<h4>Create contract</h4>
+<button onclick="create_con()">Create Contract</button>
+<h4>Set Contract Terms</h4>
+<table>
+  <tr><td>Customer address:</td><td><input onchange="term_regularizer()" id="terms1" value="0"></td></tr>
+  <tr><td>Authority address:</td><td><input onchange="term_regularizer()" id="terms2" value="0"></td></tr>
+  <tr><td>Tempurature threshold:</td><td><input id="terms3" value="0"> Fahrenheit</td></tr>
+  <tr><td>Premium:</td><td><input id="terms4" value="0"> ether</td></tr>
+  <tr><td>Payment period:</td><td><input id="terms5" value="0"> seconds</td></tr>
+  <tr><td>Number of periods</td><td><input id="terms6" value="0"></td></tr>
+  <tr><td>Insured amount:</td><td><input id="terms7" value="0"> ether</td></tr>
+</table>
+<button onclick="set_terms()">Set Terms</button>
+
+<h4>Enforce Contract</h4>
+<button onclick="enforce()">Enforce</button>
+<button onclick="killer()">Kill contract (demo only)</button>
+
+
+<br></br>
+<h2>Weather Authority</h2>
+<p>Temperature (F): <input id="temp" value="0"></p>
+<button onclick="update_temp()">Notarize Temperature</button>
+
+<br></br>
+</body>
+
+
+</html>
