@@ -1,13 +1,13 @@
 // Editable list of legal voters
 // Meant to serve as an interface that schelling decisions can easily follow
 // Implementations can either be whitelists or blacklists
-contract VoterPool {
+contract BlackList {
 
   address owner;
   mapping (address => bool) blacklisted;
 
   // Initialize pool with trusted owner
-  function VoterPool {
+  function BlackList() {
     owner = msg.sender;
   }
 
@@ -17,7 +17,7 @@ contract VoterPool {
   }
 
   // Blacklist the voter
-  function blacklist(address entry) {
+  function ban(address entry) {
     if (msg.sender != owner) return;
     blacklisted[entry] = true;
   }

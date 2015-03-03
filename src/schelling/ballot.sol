@@ -28,7 +28,7 @@ contract OptionBallot {
     uint256 choice;
     bool redeemed;
   }
-  mapping (address => hash256) voterMap;
+  mapping (address => Participant) voterMap;
 
   // Vote tallying
   mapping (uint256 => uint256) tally;
@@ -40,14 +40,13 @@ contract OptionBallot {
   // Constructor
   function OptionBallot(
       address _authorities, uint256 _maxOption, uint256 _downPayment,
-      uint256 _startTime, uint256 _votingPeriod, uint256 _revealPeriod,
-      ) {
+      uint256 _startTime, uint256 _votingPeriod, uint256 _revealPeriod) {
     authorities = _authorities;
     maxOption = _maxOption;
     downPayment = _downPayment;
     startTime = _startTime;
     revealTime = startTime + _votingPeriod;
-    revealPeriod = revealTime + _revealPeriod;
+    redeemTime = revealTime + _revealPeriod;
   }
 
 
@@ -89,7 +88,7 @@ contract OptionBallot {
       uint256 i = 2;
       decision = 1;
       while (i <= maxOption) {
-        if (tally[i] > decision[i]) {
+        if (tally[i] > tally[decision]) {
           decision = i;
         }
         i++;
