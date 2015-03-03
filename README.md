@@ -27,8 +27,15 @@ Thus in order to use it, you must first export keys from AlethZero and pass them
 Additionally each instance of `eth` only supports a single account at a time. Thus to run a multi-account scenario one must either use AlethZero or run multiple instances of `eth`, each listening on a different port.
 
 ### Python
-The SchelllingCoin implementation is currently a pile of scripts and needs no compilation/installation.
-In order to run the scripts it may be necessary to install some additional packages via `pip`, but this should not be trouble. We will include a `setup.py` for this purpose at some point.
+The SchellingCoin backend is currently all Python and needs no special compilation.
+We do provide a `setup.py` to aid with installation. It is run the standard way via:
+
+```
+python setup.py install
+```
+
+If this for some reason fails, the manual installation with `pip` and moving around files is not difficult.
+
 
 ### Windows
 Everything but `pyethereum` works on Windows (TODO: add shocked emoticon). This is a good compromise since `pyethereum` doesn't work well anywhere.
