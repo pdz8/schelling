@@ -123,4 +123,13 @@ contract I_VoterPool {
   function is_voter(address entry) returns(bool ret) {
     return true;
   }
+  function kill_me() {
+    suicide(msg.sender);
+  }
 }
+
+
+
+// vim: set tabstop=2:
+// vim: set shiftwidth=2:
+

@@ -1,5 +1,7 @@
 # Misc stuff I don't want
 *.url
+sandbox/
+*.sublime-workspace
 
 
 # Byte-compiled / optimized / DLL files
