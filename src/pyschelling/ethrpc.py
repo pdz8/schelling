@@ -198,3 +198,8 @@ if __name__ == "__main__":
 		sys.stdout.write(r)
 
 
+
+# vim: set noexpandtab:
+# vim: set tabstop=4:
+# vim: set shiftwidth=4:
+
