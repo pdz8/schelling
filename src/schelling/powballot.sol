@@ -1,11 +1,11 @@
 // Schelling Coin implementation
 
 // Schelling ballot that does not break values into binary representation
-contract OptionBallot {
+contract PowBallot {
 
 
   // Authority which chooses voters
-  address authorities;
+  address pool;
 
   // Choice range (0 is not at option)
   uint256 maxOption;
@@ -43,11 +43,11 @@ contract OptionBallot {
 
 
   // Constructor
-  function OptionBallot(
-      address _authorities, uint256 _maxOption, uint256 _downPayment,
+  function PowBallot(
+      address _pool, uint256 _maxOption, uint256 _downPayment,
       uint256 _startTime, uint256 _votingPeriod, uint256 _revealPeriod,
       hash256 _threshold) {
-    authorities = _authorities;
+    pool = _pool;
     maxOption = _maxOption;
     downPayment = _downPayment;
     startTime = _startTime;
@@ -88,7 +88,7 @@ contract OptionBallot {
     if (!voterMap[tx.origin].enrolled) return;
     if (challenge == 0x0) return;
     if (h > threshold) return;
-    if (!I_VoterPool(authorities).is_voter(tx.origin)) return; // May not be needed
+    if (!I_VoterPool(pool).is_voter(tx.origin)) return; // May not be needed
     voterMap[tx.origin].h = h;
   }
 
@@ -137,7 +137,7 @@ contract OptionBallot {
       tx.origin.send(reward);
       numRedeemed++;
       if (numRedeemed == numTallied) {
-        suicide(authorities);
+        suicide(pool);
       }
     }
   }
@@ -152,6 +152,7 @@ contract OptionBallot {
 
 
 // Voter pool interface
+// This is the simplest example of a voter pool
 contract I_VoterPool {
   function is_voter(address entry) returns(bool ret) {
     return true;

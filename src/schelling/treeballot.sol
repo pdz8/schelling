@@ -1,11 +1,48 @@
-// Schelling Coin implementation
+// Schelling Coin implementation with a hierarchy of voter pools
+// Each ballot creates a pool for the correct voters and incorrect voters
+// A future ballot-maker can choose whichever pool they trust more
+
+
+// Node in the tree of voter pools
+// Acts as a simple whitelist
+contract TreePool {
+
+  address owner;
+  mapping (address => bool) whitelist;
+
+  // Establish ballot as creator
+  function TreePool() {
+    owner = msg.sender;
+  }
+
+  // Creator ballot may register voters into pool
+  function register(address entry) {
+    if (msg.sender == owner) {
+      whitelist[entry] = true;
+    }
+  }
+
+  // Check the whitelist
+  function is_voter(address entry) returns(bool ret) {
+    return whitelist[entry];
+  }
+
+  // Demo only
+  function kill_me() {
+    suicide(msg.sender);
+  }
+}
+
 
 // Schelling ballot that does not break values into binary representation
-contract OptionBallot {
+contract TreeBallot {
 
-
-  // Authority which chooses voters
+  // Authority which chooses voters (parent)
   address pool;
+
+  // Child voter pools
+  address rightPool;
+  address wrongPool;
 
   // Choice range (0 is not at option)
   uint256 maxOption;
@@ -32,13 +69,11 @@ contract OptionBallot {
 
   // Vote tallying
   mapping (uint256 => uint256) tally;
-  uint256 numTallied;
   uint256 decision;
-  uint256 numRedeemed;
 
 
   // Constructor
-  function OptionBallot(
+  function TreeBallot(
       address _pool, uint256 _maxOption, uint256 _downPayment,
       uint256 _startTime, uint256 _votingPeriod, uint256 _revealPeriod) {
     pool = _pool;
@@ -54,7 +89,7 @@ contract OptionBallot {
   function submit_hash(hash256 h) {
     if (block.timestamp < startTime || block.timestamp >= revealTime) return;
     if (voterMap[tx.origin].h != 0x0) return;
-    if (!I_VoterPool(pool).is_voter(tx.origin)) return;
+    if (!TreePool(pool).is_voter(tx.origin)) return;
     if (msg.value < downPayment) return;
     voterMap[tx.origin].h = h;
   }
@@ -70,10 +105,10 @@ contract OptionBallot {
 
     // Check hash and vote if good
     hash256 h = sha256(tx.origin, address(this), voteVal, key);
-    if (voterMap[tx.origin].h != h) return;
-    voterMap[tx.origin].choice = voteVal;
-    tally[voteVal]++;
-    numTallied++;
+    if (voterMap[tx.origin].h == h) {
+      voterMap[tx.origin].choice = voteVal;
+      tally[voteVal]++;
+    }
   }
 
 
@@ -85,8 +120,8 @@ contract OptionBallot {
 
     // Choose winner if necessary
     if (decision == 0) {
-      uint256 i = 2;
-      decision = 1;
+      uint256 i = 1;
+      decision = 0;
       while (i <= maxOption) {
         if (tally[i] > tally[decision]) {
           decision = i;
@@ -98,14 +133,27 @@ contract OptionBallot {
     }
 
     // Reward voter
-    if (voterMap[tx.origin].choice == decision) {
-      voterMap[tx.origin].h = 0;
-      voterMap[tx.origin].choice == 0;
+    if (voterMap[tx.origin].choice == decision 
+        && !voterMap[tx.origin].redeemed) {
+      voterMap[tx.origin].redeemed = true;
       tx.origin.send(reward);
-      numRedeemed++;
-      if (numRedeemed == numTallied) {
-        suicide(pool);
+    }
+  }
+
+
+  // Request to be put in a forked pool
+  function fork() {
+    if (voterMap[tx.origin].choice == 0) return;
+    if (voterMap[tx.origin].choice == decision) {
+      if (rightPool == 0x0) {
+        rightPool = address(new TreePool());
       }
+      TreePool(rightPool).register(tx.origin);
+    } else {
+      if (wrongPool == 0x0) {
+        wrongPool = address(new TreePool());
+      }
+      TreePool(wrongPool).register(tx.origin);
     }
   }
 
@@ -117,17 +165,6 @@ contract OptionBallot {
 
 }
 
-
-// Voter pool interface
-// This is the simplest example of a voter pool
-contract I_VoterPool {
-  function is_voter(address entry) returns(bool ret) {
-    return true;
-  }
-  function kill_me() {
-    suicide(msg.sender);
-  }
-}
 
 
 
