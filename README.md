@@ -44,9 +44,9 @@ The procedure is as follows:
 
 1. Voters enroll into the voting pool of the ballot contract. The voting pools may have their own procedures necessary for enrollment. This may include proof-of-work, E-mail verification, etc. After enrollment voters wait for the ballot's start time.
 2. At its start time, the ballot allows enrolled voters to submit hashes of their vote along with down payments asserting the correctness of the vote. Hashes have the form
-```
+`
 hash256 h = sha256(tx.origin, address(this), voteVal, key);
-```
+`
 To emulate a commitment scheme, voters are required to hash a key with their votes. We cannot enforce that voters pick good keys or unique keys.
 3. The hash submission phase ends after a set amount of time and leads into the reveal phase. Here voters reveal the votes and keys used to create their hashes. If the hash checks out the vote is tallied.
 4. Finally, once the reveal phase is over, the contract enters the redeem phase. This lets voters who were in the majority redeem their winnings.
