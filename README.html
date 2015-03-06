@@ -30,8 +30,21 @@ Additionally each instance of <code>eth</code> only supports a single account at
 
 <h4>Python</h4>
 
-<p>The SchelllingCoin implementation is currently a pile of scripts and needs no compilation/installation.
-In order to run the scripts it may be necessary to install some additional packages via <code>pip</code>, but this should not be trouble. We will include a <code>setup.py</code> for this purpose at some point.</p>
+<p>The server-side component of SchellingCoin is written in Python. Thus no compilation is needed for this project's source.</p>
+
+<p>In order to run the scripts it may be necessary to install some additional packages via <code>pip</code>, but this should not be trouble. There <code>setup.py</code> for this purpose (and for general installation):</p>
+
+<p><code>
+python setup.py install
+</code></p>
+
+<h4>Shell</h4>
+
+<p>Common patterns arise when developing and testing the SchellingCoin implementation. We try to collect these patterns into a single helpful script <code>schellrc.sh</code>:</p>
+
+<p><code>
+source schellrc.sh
+</code></p>
 
 <h4>Windows</h4>
 
