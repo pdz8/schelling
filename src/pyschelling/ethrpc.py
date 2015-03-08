@@ -239,7 +239,7 @@ if __name__ == "__main__":
 		r = get_storage(args["<addr>"])
 		sys.stdout.write(str(r))
 	elif args['call']:
-		r = call(args["<addr>"], sig, params, data=data)
+		r = call(args["<recip>"], sig, params, data=data)
 		sys.stdout.write(str(r))
 	elif args['get_index']:
 		r = get_index(args["<addr>"], try_int(args["<index>"]))
