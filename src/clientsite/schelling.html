@@ -24,7 +24,7 @@
   <div class="panel-body">
     <div class="form-group">
       <label for="accountPicker">Address</label>
-      <select id="accountPicker" class="form-control" ng-model="acc" ng-change="changeAcc()">
+      <select id="accountPicker" class="form-control" ng-model="acc" ng-change="setAccount(acc)">
         <option ng-repeat="x in accs">{{x}}</option>
       </select>
     </div>
@@ -36,10 +36,7 @@
   </div>
 </div>
 
-<!-- Main grid -->
-<div class="panel panel-default">
-
-  <!-- Mode selection menu -->
+<!-- <div class="panel panel-default">
   <div class="panel-heading">
     <ul class="nav nav-tabs">
       <li><a>Vote</a></li>
@@ -47,18 +44,19 @@
       <li><a>Explore</a></li>
     </ul>
   </div>
-
-  <!-- Voter  -->
   <div class="panel-body">
     <h3>Jumbotrons are obnoxious</h3>
     <p>I think we can all agree on this. Any questions?</p>
   </div>
+</div> -->
 
+<!-- Container end tag -->
 </div>
 
-
 <script type="text/javascript" src="lib/bignumber.min.js"></script>
-<script type="text/javascript" src="lib/ethereum.js"></script>
+<!-- <script type="text/javascript" src="lib/bignumber.js"></script> -->
+<script type="text/javascript" src="lib/ethereum.min.js"></script>
+<!-- <script type="text/javascript" src="lib/ethereum.js"></script> -->
 <script type="text/javascript" src="schelling.js"></script>
 </body>
 </html>
