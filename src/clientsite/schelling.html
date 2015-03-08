@@ -1,24 +1,46 @@
 <!DOCTYPE html>
 <html>
+
 <!-- This is a single page application for interacting with SchellingCoin -->
 <head>
+  <meta charset="utf-8">
   <title>SchellingCoin</title>
-  
   <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.2/cosmo/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="schelling.css">
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
 </head>
 
 <body>
-<div class="container" ng-app="schellApp">
+<div class="container" ng-app="SchellApp">
 
 <!-- Titlebar stuff -->
 <h1>SchellingCoin <small>on Ethereum</small></h1>
 
-<!-- Grid -->
-<div class="panel panel-default panel-body">
+<!-- Account -->
+<div class="panel panel-default" ng-controller="UserAccount">
+  <div class="panel-heading">
+    <h3 class="panel-title">My Account</h3>
+  </div>
+  <div class="panel-body">
+    <div class="form-group">
+      <label for="accountPicker">Address</label>
+      <select id="accountPicker" class="form-control" ng-model="acc" ng-change="changeAcc()">
+        <option ng-repeat="x in accs">{{x}}</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="balanceDisplay">Balance (wei)</label>
+      <!-- <input id="balanceDisplay" type="text" class="form-control" readonly="readonly" ng-model="bal"> -->
+      <h4 id="balanceDisplay" class="form-group">{{bal}}</h4>
+    </div>
+  </div>
+</div>
+
+<!-- Main grid -->
+<div class="panel panel-default">
 
   <!-- Mode selection menu -->
-  <div>
+  <div class="panel-heading">
     <ul class="nav nav-tabs">
       <li><a>Vote</a></li>
       <li><a>Ask</a></li>
@@ -27,7 +49,7 @@
   </div>
 
   <!-- Voter  -->
-  <div>
+  <div class="panel-body">
     <h3>Jumbotrons are obnoxious</h3>
     <p>I think we can all agree on this. Any questions?</p>
   </div>
@@ -35,7 +57,8 @@
 </div>
 
 
-<script type="text/javascript" src="bignumber.min.js"></script>
-<script type="text/javascript" src="ethereum.min.js"></script>
+<script type="text/javascript" src="lib/bignumber.min.js"></script>
+<script type="text/javascript" src="lib/ethereum.js"></script>
+<script type="text/javascript" src="schelling.js"></script>
 </body>
 </html>
