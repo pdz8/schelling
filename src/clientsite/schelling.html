@@ -36,27 +36,83 @@
   </div>
 </div>
 
-<!-- <div class="panel panel-default">
+<!-- Voter operation -->
+<div class="panel panel-default" ng-controller="VotePage">
   <div class="panel-heading">
-    <ul class="nav nav-tabs">
-      <li><a>Vote</a></li>
-      <li><a>Ask</a></li>
-      <li><a>Explore</a></li>
-    </ul>
+    <h3 class="panel-title">Vote</h3>
   </div>
   <div class="panel-body">
-    <h3>Jumbotrons are obnoxious</h3>
-    <p>I think we can all agree on this. Any questions?</p>
+
+    <!-- Contract info -->
+    <div class="panel panel-default">
+      <!-- <div class="panel-heading">
+        <h3 class="panel-title">Contract</h3>
+      </div> -->
+      <div class="panel-body">
+        <div class="form-group">
+          <label for="contractBox">Contract Address</label>
+          <input id="contractBox" type="text" class="form-control" ng-model="conaddr" ng-change="setContract(conaddr)">
+        </div>
+        <div class="form-group">
+          <label>Question</label>
+          <h4>{{question ? question : 'N/A'}}</h4>
+        </div>
+        <div class="row">
+          <div class="form-group col-md-4">
+            <label>Start Time</label>
+            <h4>{{c.startTime ? (c.startTime | date:'medium') : 'N/A'}}</h4>
+          </div>
+          <div class="form-group col-md-4">
+            <label>Reveal Time</label>
+            <h4>{{c.revealTime ? (c.revealTime | date:'medium') : 'N/A'}}</h4>
+          </div>
+          <div class="form-group col-md-4">
+            <label>Redeem Time</label>
+            <h4>{{c.redeemTime ? (c.redeemTime | date:'medium') : 'N/A'}}</h4>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Down Payment</label>
+          <h4>{{c.downPayment ? c.downPayment : 'N/A'}}</h4>
+        </div>
+      </div>
+    </div>
+
+    <!-- Voter -->
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <div class="row">
+          <div class="form-group col-md-6">
+            <label for="votePicker">Selection</label>
+            <input id="votePicker" type="number" class="form-control" min="1" ng-model="choice">
+          </div>
+          <div class="form-group col-md-6">
+            <label for="keyPicker">Key</label>
+            <input id="keyPicker" type="text" class="form-control" ng-model="key">
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-default" ng-click="submitHash()">Submit Hash</button>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-default" ng-click="revealHash()">Reveal Vote</button>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-default" ng-click="redeemReward()">Redeem</button>
+        </div>
+      </div>
+    </div>
   </div>
-</div> -->
+</div>
+
 
 <!-- Container end tag -->
 </div>
 
 <script type="text/javascript" src="lib/bignumber.min.js"></script>
 <!-- <script type="text/javascript" src="lib/bignumber.js"></script> -->
-<script type="text/javascript" src="lib/ethereum.min.js"></script>
-<!-- <script type="text/javascript" src="lib/ethereum.js"></script> -->
+<!-- <script type="text/javascript" src="lib/ethereum.min.js"></script> -->
+<script type="text/javascript" src="lib/ethereum.js"></script>
 <script type="text/javascript" src="schelling.js"></script>
 </body>
 </html>

@@ -190,6 +190,9 @@ contract TreeBallot {
     function getRedeemTime() constant returns(uint256 ret) {
         return redeemTime;
     }
+    function getDownPayment() constant returns(uint256 ret) {
+        return downPayment;
+    }
 
 
     // Debug only
