@@ -5,13 +5,13 @@ var app = angular.module('SchellApp', []);
 app.controller('UserAccount', 
         ['$scope','ethService','schellData',
         function($scope,es,sd) {
-    $scope.accs = es.accounts;
+    $scope.accs = es.getAccounts();
     $scope.setAccount = function(a) {
         if ($scope.acc != a) { $scope.acc = a; }
         sd.account = a;
         $scope.bal = new BigNumber(es.getBalance(a)).toString(10);
     };
-    $scope.setAccount(es.coinbase);
+    $scope.setAccount(es.getCoinbase());
 }]);
 
 
@@ -39,17 +39,27 @@ app.factory('ethService', [function() {
     var w = require('web3');
     w.setProvider(new w.providers.HttpSyncProvider('http://localhost:8080')); // 8080 for cpp/AZ, 8545 for go/mist
     return {
-        accounts: w.eth.accounts,
-        getBalance: w.eth.balanceAt,
-        call: w.eth.call,
-        coinbase: w.eth.coinbase
+        getAccounts: function() {
+            try { return w.eth.accounts; } catch(e) { return []; }
+        },
+        getBalance: function(a) {
+            try { return w.eth.balanceAt(a); } catch(e) { return '0x0'; }
+        },
+        call: function(a) {
+            try { return w.eth.call(a); } catch(e) { return null; }
+        },
+        getCoinbase: function() {
+            try { return w.eth.coinbase; } catch(e) { return ''; }
+        },
     };
 }]);
 
 
 // Allows data to be shared between controllers
 // Also interacts with ethereum
-app.factory('schellData', ['ethService','util',function(es,util) {
+app.factory('schellData',
+        ['ethService','util','abi',
+        function(es,util,abi) {
 
     var loadContract = function(a) {
         var c = { address: a };
