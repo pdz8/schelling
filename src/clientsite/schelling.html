@@ -110,6 +110,51 @@
 </div>
 
 
+<!-- Schelling contract creation -->
+<div class="panel panel-default" ng-controller="CreatePage">
+  <div class="panel-heading">
+    <h3 class="panel-title">Ask</h3>
+  </div>
+  <div class="panel-body">
+    <div class="form-group">
+      <label for="poolBox">Voter Pool Address</label>
+      <input it="poolBox" type="text" class="form-control">
+    </div>
+    <div class="form-group">
+      <label for="questionBox">Question</label>
+      <textarea id="questionBox" class="form-control" style="resize: none"></textarea>
+    </div>
+    <div class="row">
+      <div class="form-group col-sm-4">
+        <label for="startBox">Start Time</label>
+        <input id="startBox" type="text" class="form-control" ng-model="startTime">
+      </div>
+      <div class="form-group col-sm-4">
+        <label for="hashPeriodBox">Hash Submit Period</label>
+        <input id="hashPeriodBox" type="text" class="form-control" ng-model="hashPeriod">
+      </div>
+      <div class="form-group col-sm-4">
+        <label for="revealPeriodBox">Reveal Period</label>
+        <input id="revealPeriodBox" type="text" class="form-control" ng-model="revealPeriod">
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-group col-sm-6">
+        <label for="maxvalBox">Max Option</label>
+        <input id="maxvalBox" type="number" min="2" class="form-control" ng-model="maxOption">
+      </div>
+      <div class="form-group col-sm-6">
+        <label for="dpBox">Down Payment (wei)</label>
+        <input id="dpBox" type="text" class="form-control" ng-model="downPayment">
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-default">Create Contract</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- Container end tag -->
 </div>
 

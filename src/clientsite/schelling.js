@@ -58,6 +58,21 @@ app.controller('VotePage',
 }]);
 
 
+// Create new SchellingCoin contracts
+app.controller('CreatePage',
+        ['$scope','ethService','schellData','util',
+        function($scope,es,sd,util) {
+    $scope.startTime = new Date().toLocaleString();
+    $scope.hashPeriod = '01:00:00'
+    $scope.revealPeriod = '01:00:00'
+    $scope.maxOption = 2;
+    $scope.downPayment = "1000000000000000000"
+    $scope.askQuestion = function() {
+
+    };
+}]);
+
+
 // Provides (wrapped) Ethereum functions
 app.factory('ethService', [function() {
     var web3 = require('web3');
@@ -146,6 +161,15 @@ app.factory('util', [function() {
         }
         return s;
     };
+
+    // Parse times of form hh:mm:ss to number of seconds
+    var parseSeconds = function(t) {
+        var num_arr = t.split(':').map(function(s) {
+            return Number(s) ? Math.ceil(Math.abs(Number(s))) : 0;
+        });
+        if (num_arr.length != 3) return 3600;
+        return (3600*num_arr[0]) + (60*num_arr[1]) + num_arr[2];
+    }
 
     return {
         bigToDate: bigToDate,
