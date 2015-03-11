@@ -48,6 +48,13 @@ app.controller('VotePage',
         }).safe.redeem();
     };
     $scope.c = null; // This is the contract object
+
+    // Debug only!
+    $scope.kill = function() {
+        $scope.c.ethobj.transact({
+            from: sd.account
+        }).safe.kill_me();
+    };
 }]);
 
 
@@ -99,10 +106,10 @@ app.factory('schellData',
         if (!es.isAddress(a)) return null;
         var c = { address: a };
         c.ethobj = es.contract(a,abi.abiTreeBallot)
-        c.startTime = util.hexToDate(c.ethobj.call().safe.getStartTime());
-        c.revealTime = util.hexToDate(c.ethobj.call().safe.getRevealTime());
-        c.redeemTime = util.hexToDate(c.ethobj.call().safe.getRedeemTime());
-        c.downPayment = util.hexToBig(c.ethobj.call().safe.getDownPayment());
+        c.startTime = util.bigToDate(c.ethobj.call().safe.getStartTime());
+        c.revealTime = util.bigToDate(c.ethobj.call().safe.getRevealTime());
+        c.redeemTime = util.bigToDate(c.ethobj.call().safe.getRedeemTime());
+        c.downPayment = c.ethobj.call().safe.getDownPayment();
         return c;
     }
 
@@ -119,9 +126,8 @@ app.factory('schellData',
 app.factory('util', [function() {
 
     // Convert hex UTC to Date
-    var hexToDate = function(h) {
-        var i = parseInt(h,16);
-        return i ? new Date(i * 1000) : null;
+    var bigToDate = function(b) {
+        return b && b.toNumber() ? new Date(b.toNumber() * 1000) : null;
     };
 
     // Convert hex to integer string
@@ -142,7 +148,7 @@ app.factory('util', [function() {
     };
 
     return {
-        hexToDate: hexToDate,
+        bigToDate: bigToDate,
         hexToBig: hexToBig,
         rmox: rmox
     };

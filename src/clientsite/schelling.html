@@ -72,7 +72,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label>Down Payment</label>
+          <label>Down Payment (wei)</label>
           <h4>{{c && c.downPayment.toString(10) ? c.downPayment.toString(10) : 'N/A'}}</h4>
         </div>
       </div>
@@ -92,13 +92,17 @@
           </div>
         </div>
         <div class="btn-group">
-          <button class="btn btn-default" ng-click="submitHash()" ng-disabled="!Boolean(c)">Submit Hash</button>
+          <button class="btn btn-default" ng-click="submitHash()" ng-disabled="!c">Submit Hash</button>
         </div>
         <div class="btn-group">
-          <button class="btn btn-default" ng-click="revealHash()" ng-disabled="!Boolean(c)">Reveal Vote</button>
+          <button class="btn btn-default" ng-click="revealHash()" ng-disabled="!c">Reveal Vote</button>
         </div>
         <div class="btn-group">
-          <button class="btn btn-default" ng-click="redeemReward()" ng-disabled="!Boolean(c)">Redeem</button>
+          <button class="btn btn-default" ng-click="redeemReward()" ng-disabled="!c">Redeem</button>
+        </div>
+        <!-- This is for debugging purposes only! -->
+        <div class="btn-group">
+          <button class="btn btn-danger" ng-click="kill()" ng-disabled="!c">Kill</button>
         </div>
       </div>
     </div>
