@@ -17,40 +17,74 @@ app.controller('UserAccount',
 
 // Allows votes on a contract
 app.controller('VotePage', 
-        ['$scope','ethService','schellData',
-        function($scope,es,sd) {
+        ['$scope','ethService','schellData','util',
+        function($scope,es,sd,util) {
     $scope.setContract = function(address) {
+        if (!es.isAddress(address)) {
+            $scope.c = null;
+            return;
+        }
         $scope.c = sd.loadContract(address);
     };
     $scope.submitHash = function() {
-
+        var h = sd.account 
+                + util.rmox($scope.c.address) 
+                + util.rmox(es.fromDecimal($scope.option))
+                + util.rmox(es.fromAscii($scope.key));
+        h = es.sha3(h);
+        $scope.c.ethobj.transact({
+            value: web3.fromDecimal($scope.c.downPayment),
+            from: sd.account
+        }).safe.submit_hash(h);
     };
     $scope.revealHash = function() {
-
+        $scope.c.ethobj.transact({
+            from: sd.account
+        }).safe.reveal_vote(es.fromDecimal($scope.option),es.fromAscii($scope.key));
     };
     $scope.redeemReward = function() {
-
+        $scope.c.ethobj.transact({
+            from: sd.account
+        }).safe.redeem();
     };
+    $scope.c = null; // This is the contract object
 }]);
 
 
 // Provides (wrapped) Ethereum functions
 app.factory('ethService', [function() {
-    var w = require('web3');
-    w.setProvider(new w.providers.HttpSyncProvider('http://localhost:8080')); // 8080 for cpp/AZ, 8545 for go/mist
+    var web3 = require('web3');
+    web3.setProvider(new web3.providers.HttpSyncProvider('http://localhost:8080')); // 8080 for cpp/AZ, 8545 for go/mist
     return {
         getAccounts: function() {
-            try { return w.eth.accounts; } catch(e) { return []; }
+            try { return web3.eth.accounts; } catch(e) { return []; }
         },
         getBalance: function(a) {
-            try { return w.eth.balanceAt(a); } catch(e) { return '0x0'; }
+            try { return web3.eth.balanceAt(a); } catch(e) { return '0x0'; }
         },
         call: function(a) {
-            try { return w.eth.call(a); } catch(e) { return null; }
+            try { return web3.eth.call(a); } catch(e) { return 0; }
         },
         getCoinbase: function() {
-            try { return w.eth.coinbase; } catch(e) { return ''; }
+            try { return web3.eth.coinbase; } catch(e) { return ''; }
         },
+        contract: function(addr,abi) {
+            var c = web3.eth.contract(addr,abi);
+            c.safe = {}
+            abi.map(function(f) {
+                c.safe[f.basename] = function() {
+                    try { return c[f.basename](arguments); }
+                    catch(e) { return 0; }
+                }
+            });
+            return c;
+        },
+        isAddress: function(a) {
+            return a.substring(0,2) == '0x' && a.length == 42 && parseInt(a,16);
+        },
+        fromAscii: web3.fromAscii,
+        fromDecimal: web3.fromDecimal,
+        sha3: web3.sha3
     };
 }]);
 
@@ -62,21 +96,13 @@ app.factory('schellData',
         function(es,util,abi) {
 
     var loadContract = function(a) {
+        if (!es.isAddress(a)) return null;
         var c = { address: a };
-        if (a.substring(0,2) != '0x') return c;
-        try {
-            c.startTime = util.hexToDate(es.call({to:a,data:'0xc828371e'}));
-            c.revealTime = util.hexToDate(es.call({to:a,data:'0x157b0448'}));
-            c.redeemTime = util.hexToDate(es.call({to:a,data:'0xce5ed531'}));
-            c.downPayment = new BigNumber(
-                es.call({to:a,data:'0xd6dd04f7'})).toString(10);
-        } catch(e) {
-            // c.question = null;
-            // c.startTime = null;
-            // c.revealTime = null;
-            // c.redeemTime = null;
-            // c.downPayment = null;
-        }
+        c.ethobj = es.contract(a,abi.abiTreeBallot)
+        c.startTime = util.hexToDate(c.ethobj.call().safe.getStartTime());
+        c.revealTime = util.hexToDate(c.ethobj.call().safe.getRevealTime());
+        c.redeemTime = util.hexToDate(c.ethobj.call().safe.getRedeemTime());
+        c.downPayment = util.hexToBig(c.ethobj.call().safe.getDownPayment());
         return c;
     }
 
@@ -98,22 +124,27 @@ app.factory('util', [function() {
         return i ? new Date(i * 1000) : null;
     };
 
-    // http://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript
-    var formatDate = function(datetime) {
-        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        var year = datetime.getFullYear();
-        var month = months[datetime.getMonth()];
-        var date = datetime.getDate();
-        var hour = datetime.getHours();
-        var min = datetime.getMinutes();
-        var sec = datetime.getSeconds();
-        var time = date + ',' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
-        return time;
+    // Convert hex to integer string
+    var hexToBig = function(h) {
+        try {
+            return new BigNumber(h);
+        } catch(e) {
+            return new BigNumber(0);
+        }
+    };
+
+    // Remove 0x that prepends hex number
+    var rmox = function(s) {
+        if (s.substring(0,2) == "0x") {
+            s = s.substring(2,s.length);
+        }
+        return s;
     };
 
     return {
-        formatDate: formatDate,
-        hexToDate: hexToDate
+        hexToDate: hexToDate,
+        hexToBig: hexToBig,
+        rmox: rmox
     };
 }]);
 

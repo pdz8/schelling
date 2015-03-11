@@ -123,7 +123,7 @@ contract TreeBallot {
         // if (voterMap[tx.origin].h == 0x0) return;
 
         // Check hash and vote if good
-        hash256 h = sha256(tx.origin, address(this), voteVal, key);
+        hash256 h = sha3(tx.origin, address(this), voteVal, key);
         if (voterMap[tx.origin].h == h) {
             voterMap[tx.origin].choice = voteVal;
             tally[voteVal]++;

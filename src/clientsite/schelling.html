@@ -58,22 +58,22 @@
           <h4>{{question ? question : 'N/A'}}</h4>
         </div>
         <div class="row">
-          <div class="form-group col-md-4">
+          <div class="form-group col-sm-4">
             <label>Start Time</label>
-            <h4>{{c.startTime ? (c.startTime | date:'medium') : 'N/A'}}</h4>
+            <h4>{{c && c.startTime ? (c.startTime | date:'medium') : 'N/A'}}</h4>
           </div>
-          <div class="form-group col-md-4">
+          <div class="form-group col-sm-4">
             <label>Reveal Time</label>
-            <h4>{{c.revealTime ? (c.revealTime | date:'medium') : 'N/A'}}</h4>
+            <h4>{{c && c.revealTime ? (c.revealTime | date:'medium') : 'N/A'}}</h4>
           </div>
-          <div class="form-group col-md-4">
+          <div class="form-group col-sm-4">
             <label>Redeem Time</label>
-            <h4>{{c.redeemTime ? (c.redeemTime | date:'medium') : 'N/A'}}</h4>
+            <h4>{{c && c.redeemTime ? (c.redeemTime | date:'medium') : 'N/A'}}</h4>
           </div>
         </div>
         <div class="form-group">
           <label>Down Payment</label>
-          <h4>{{c.downPayment ? c.downPayment : 'N/A'}}</h4>
+          <h4>{{c && c.downPayment.toString(10) ? c.downPayment.toString(10) : 'N/A'}}</h4>
         </div>
       </div>
     </div>
@@ -82,23 +82,23 @@
     <div class="panel panel-default">
       <div class="panel-body">
         <div class="row">
-          <div class="form-group col-md-6">
+          <div class="form-group col-sm-6">
             <label for="votePicker">Selection</label>
             <input id="votePicker" type="number" class="form-control" min="1" ng-model="choice">
           </div>
-          <div class="form-group col-md-6">
+          <div class="form-group col-sm-6">
             <label for="keyPicker">Key</label>
             <input id="keyPicker" type="text" class="form-control" ng-model="key">
           </div>
         </div>
         <div class="btn-group">
-          <button class="btn btn-default" ng-click="submitHash()">Submit Hash</button>
+          <button class="btn btn-default" ng-click="submitHash()" ng-disabled="!Boolean(c)">Submit Hash</button>
         </div>
         <div class="btn-group">
-          <button class="btn btn-default" ng-click="revealHash()">Reveal Vote</button>
+          <button class="btn btn-default" ng-click="revealHash()" ng-disabled="!Boolean(c)">Reveal Vote</button>
         </div>
         <div class="btn-group">
-          <button class="btn btn-default" ng-click="redeemReward()">Redeem</button>
+          <button class="btn btn-default" ng-click="redeemReward()" ng-disabled="!Boolean(c)">Redeem</button>
         </div>
       </div>
     </div>

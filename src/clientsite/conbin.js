@@ -194,11 +194,20 @@ var binTreePool =
 '0x60056011565b60ce80601b6000396000f35b33600081905550560060003560e060020a900480634420e486146029578063573705a6146038578063e369885314604b57005b60326004356057565b60006000f35b6041600435609b565b8060005260206000f35b605160c1565b60006000f35b600054600160a060020a031633600160a060020a0316146075576098565b60016001600083600160a060020a03168152602001908152602001600020819055505b50565b60006001600083600160a060020a03168152602001908152602001600020549050919050565b33600160a060020a0316ff56';
 
 
+    
 
+    // Retain basename of functions HACK
+    var retainBasename = function(abi) {
+        abi.map(function(f) {
+            f.basename = f.name;
+        });
+        return abi;
+    }
+    
     return {
-        abiTreePool: abiTreePool,
-        abiTreeBallot: abiTreeBallot,
-        abiRootPool: abiRootPool,
+        abiTreePool: retainBasename(abiTreePool),
+        abiTreeBallot: retainBasename(abiTreeBallot),
+        abiRootPool: retainBasename(abiRootPool),
         binRootPool: binRootPool,
         binTreeBallot: binTreeBallot,
         binTreePool: binTreePool
