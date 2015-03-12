@@ -1,6 +1,6 @@
 # Contract binary (not real filetypes)
-*.bin.txt
-*.abi.txt
+#*.bin.txt
+#*.abi.txt
 
 # Misc stuff I don't want
 *.url

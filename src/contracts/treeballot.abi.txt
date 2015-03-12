@@ -1,0 +1,187 @@
+
+======= RootPool =======
+Contract JSON ABI
+[
+   {
+      "constant" : true,
+      "inputs" : [
+         {
+            "name" : "entry",
+            "type" : "address"
+         }
+      ],
+      "name" : "is_voter",
+      "outputs" : [
+         {
+            "name" : "ret",
+            "type" : "bool"
+         }
+      ],
+      "type" : "function"
+   },
+   {
+      "constant" : false,
+      "inputs" : [],
+      "name" : "kill_me",
+      "outputs" : [],
+      "type" : "function"
+   }
+]
+
+
+======= TreeBallot =======
+Contract JSON ABI
+[
+   {
+      "constant" : true,
+      "inputs" : [],
+      "name" : "getRevealTime",
+      "outputs" : [
+         {
+            "name" : "ret",
+            "type" : "uint256"
+         }
+      ],
+      "type" : "function"
+   },
+   {
+      "constant" : false,
+      "inputs" : [
+         {
+            "name" : "h",
+            "type" : "hash256"
+         }
+      ],
+      "name" : "submit_hash",
+      "outputs" : [],
+      "type" : "function"
+   },
+   {
+      "constant" : false,
+      "inputs" : [],
+      "name" : "fork",
+      "outputs" : [],
+      "type" : "function"
+   },
+   {
+      "constant" : true,
+      "inputs" : [],
+      "name" : "getMaxOption",
+      "outputs" : [
+         {
+            "name" : "ret",
+            "type" : "uint256"
+         }
+      ],
+      "type" : "function"
+   },
+   {
+      "constant" : false,
+      "inputs" : [
+         {
+            "name" : "voteVal",
+            "type" : "uint256"
+         },
+         {
+            "name" : "key",
+            "type" : "uint256"
+         }
+      ],
+      "name" : "reveal_vote",
+      "outputs" : [],
+      "type" : "function"
+   },
+   {
+      "constant" : false,
+      "inputs" : [],
+      "name" : "redeem",
+      "outputs" : [],
+      "type" : "function"
+   },
+   {
+      "constant" : true,
+      "inputs" : [],
+      "name" : "getStartTime",
+      "outputs" : [
+         {
+            "name" : "ret",
+            "type" : "uint256"
+         }
+      ],
+      "type" : "function"
+   },
+   {
+      "constant" : true,
+      "inputs" : [],
+      "name" : "getRedeemTime",
+      "outputs" : [
+         {
+            "name" : "ret",
+            "type" : "uint256"
+         }
+      ],
+      "type" : "function"
+   },
+   {
+      "constant" : true,
+      "inputs" : [],
+      "name" : "getDownPayment",
+      "outputs" : [
+         {
+            "name" : "ret",
+            "type" : "uint256"
+         }
+      ],
+      "type" : "function"
+   },
+   {
+      "constant" : false,
+      "inputs" : [],
+      "name" : "kill_me",
+      "outputs" : [],
+      "type" : "function"
+   }
+]
+
+
+======= TreePool =======
+Contract JSON ABI
+[
+   {
+      "constant" : false,
+      "inputs" : [
+         {
+            "name" : "entry",
+            "type" : "address"
+         }
+      ],
+      "name" : "register",
+      "outputs" : [],
+      "type" : "function"
+   },
+   {
+      "constant" : true,
+      "inputs" : [
+         {
+            "name" : "entry",
+            "type" : "address"
+         }
+      ],
+      "name" : "is_voter",
+      "outputs" : [
+         {
+            "name" : "ret",
+            "type" : "bool"
+         }
+      ],
+      "type" : "function"
+   },
+   {
+      "constant" : false,
+      "inputs" : [],
+      "name" : "kill_me",
+      "outputs" : [],
+      "type" : "function"
+   }
+]
+

@@ -18,120 +18,120 @@ DEFAULT_STARTGAS = 10000 # ,"gas":DEFAULT_STARTGAS,"gasPrice":DEFAULT_GASPRICE
 ## RPC methods ##
 #################
 
-# Get the balance at given address
-def get_balance(addr):
-	addr = prepend0x(addr)
-	skeleton = {"jsonrpc":"2.0","method":"eth_balanceAt","params":[addr],"id":1}
-	# skeleton = {"jsonrpc":"2.0","method":"eth_getBalance","params":[addr,"-0x1"],"id":1}
-	r = requests.post(RPC_SERVER, data=json.dumps(skeleton))
-	h = json.loads(r.text)['result'].encode('ascii','ignore')
-	return int(h, 16)
+class EthRpc():
+	def __init__(self, host, port):
+		self.server = "http://{0}:{1}".format(host, str(port))
 
-# Get full storage state
-def get_storage(addr):
-	addr = prepend0x(addr)
-	skeleton = {"jsonrpc":"2.0","method":"eth_storageAt","params":[addr],"id":1}
-	# skeleton = {"jsonrpc":"2.0","method":"eth_getStorage","params":[addr,"-0x1"],"id":1}
-	r = requests.post(RPC_SERVER, data=json.dumps(skeleton))
-	store = json.loads(r.text)['result']
-	retval = {}
-	for k in store:
-		retval[k.encode('ascii','ignore')] = store[k].encode('ascii','ignore')
-	return retval
+	# Do a json request
+	def make_request(self, skeleton):
+		r = requests.post(self.server, data=json.dumps(skeleton))
+		return json.loads(r.text)
 
-# Get the storage at a given address and index
-def get_index(addr, index):
-	addr = prepend0x(addr)
-	if isinstance(index, str):
-		index = prepend0x(index)
-	if not isinstance(index, str):
-		index = hex(index)
-	skeleton = {"jsonrpc":"2.0","method":"eth_stateAt","params":[addr,index],"id":1}
-	# skeleton = {"jsonrpc":"2.0","method":"eth_getStorageAt","params":[addr,index,"-0x1"],"id":1}
-	r = requests.post(RPC_SERVER, data=json.dumps(skeleton))
-	return json.loads(r.text)['result'].encode('ascii','ignore')
+	# Get the balance at given address
+	def get_balance(self, addr):
+		addr = prepend0x(addr)
+		skeleton = {"jsonrpc":"2.0","method":"eth_balanceAt","params":[addr],"id":1}
+		# skeleton = {"jsonrpc":"2.0","method":"eth_getBalance","params":[addr,"-0x1"],"id":1}
+		h = self.make_request(skeleton)['result'].encode('ascii','ignore')
+		return int(h, 16)
 
-# Do a simple call (getters)
-def call(addr, sig, args, data=None):
-	addr = prepend0x(addr)
-	if data:
-		data = prepend0x(data)
-	else:
-		data = encode_abi(sig, args)
-	skeleton = {"jsonrpc":"2.0","method":"eth_call","params":[{"to":addr,"data":data}],"id":1}
-	r = requests.post(RPC_SERVER, data=json.dumps(skeleton))
-	return json.loads(r.text)['result'].encode('ascii','ignore')
+	# Get full storage state
+	def get_storage(self, addr):
+		addr = prepend0x(addr)
+		skeleton = {"jsonrpc":"2.0","method":"eth_storageAt","params":[addr],"id":1}
+		# skeleton = {"jsonrpc":"2.0","method":"eth_getStorage","params":[addr,"-0x1"],"id":1}
+		store = self.make_request(skeleton)['result']
+		retval = {}
+		for k in store:
+			retval[k.encode('ascii','ignore')] = store[k].encode('ascii','ignore')
+		return retval
 
-# Make transaction
-def transact(recip, ethval, sig, args, data=None, sender=None):
+	# Get the storage at a given address and index
+	def get_index(self, addr, index):
+		addr = prepend0x(addr)
+		if isinstance(index, str):
+			index = prepend0x(index)
+		if not isinstance(index, str):
+			index = hex(index)
+		skeleton = {"jsonrpc":"2.0","method":"eth_stateAt","params":[addr,index],"id":1}
+		# skeleton = {"jsonrpc":"2.0","method":"eth_getStorageAt","params":[addr,index,"-0x1"],"id":1}
+		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
-	# Format input
-	recip = prepend0x(recip)
-	if not isinstance(ethval, str):
-		ethval = hex(ethval)
-	else:
-		ethval = prepend0x(ethval)
-	if data:
-		data = prepend0x(data)
-	elif sig:
-		data = encode_abi(sig, args)
-	else:
-		data = ""
+	# Do a simple call (getters)
+	def call(self, addr, sig, args, data=None):
+		addr = prepend0x(addr)
+		if data:
+			data = prepend0x(data)
+		else:
+			data = encode_abi(sig, args)
+		skeleton = {"jsonrpc":"2.0","method":"eth_call","params":[{"to":addr,"data":data}],"id":1}
+		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
-	# Make call
-	skeleton = {"jsonrpc":"2.0","method":"eth_transact","params":[{"value":ethval,"to":recip,"data":data}],"id":1}
-	# skeleton = {"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"value":ethval,"to":recip,"data":data}],"id":1}
-	if sender:
-		sender = prepend0x(sender)
-		skeleton["params"][0]["from"] = sender
-	r = requests.post(RPC_SERVER, data=json.dumps(skeleton))
-	return json.loads(r.text)
+	# Make transaction
+	def transact(self, recip, ethval, sig, args, data=None, sender=None):
 
+		# Format input
+		recip = prepend0x(recip)
+		if not isinstance(ethval, str):
+			ethval = hex(ethval)
+		else:
+			ethval = prepend0x(ethval)
+		if data:
+			data = prepend0x(data)
+		elif sig:
+			data = encode_abi(sig, args)
+		else:
+			data = ""
 
-# Make contract
-def create_contract(ethval, code, args=[], sender=None):
-	
-	# Format inputs
-	if not isinstance(ethval, str):
-		ethval = hex(ethval)
-	else:
-		ethval = prepend0x(ethval)
-	code = prepend0x(code)
-	if args:
-		code += encode_abi('', args)[2:]
-
-	# Format and send request
-	skeleton = {"jsonrpc":"2.0","method":"eth_transact","params":[{"value":ethval,"code":code}],"id":1}
-	if sender:
-		sender = prepend0x(sender)
-		skeleton["params"][0]["from"] = sender
-	r = requests.post(RPC_SERVER, data=json.dumps(skeleton))
-	return json.loads(r.text)['result'].encode('ascii','ignore')
+		# Make call
+		skeleton = {"jsonrpc":"2.0","method":"eth_transact","params":[{"value":ethval,"to":recip,"data":data}],"id":1}
+		# skeleton = {"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"value":ethval,"to":recip,"data":data}],"id":1}
+		if sender:
+			sender = prepend0x(sender)
+			skeleton["params"][0]["from"] = sender
+		return self.make_request(skeleton)
 
 
-# Get the coinbase of the rpc server
-def get_coinbase():
-	skeleton = {"jsonrpc":"2.0","method":"eth_coinbase","params":[],"id":64}
-	r = requests.post(RPC_SERVER, data=json.dumps(skeleton))
-	return json.loads(r.text)['result'].encode('ascii','ignore')
+	# Make contract
+	def create_contract(self, ethval, code, args=[], sender=None):
+		
+		# Format inputs
+		if not isinstance(ethval, str):
+			ethval = hex(ethval)
+		else:
+			ethval = prepend0x(ethval)
+		code = prepend0x(code)
+		if args:
+			code += encode_abi('', args)[2:]
 
-def set_coinbase(addr):
-	addr = prepend0x(addr)
-	skeleton = {"jsonrpc":"2.0","method":"eth_setCoinbase","params":[addr],"id":66}
-	r = requests.post(RPC_SERVER, data=json.dumps(skeleton))
+		# Format and send request
+		skeleton = {"jsonrpc":"2.0","method":"eth_transact","params":[{"value":ethval,"code":code}],"id":1}
+		if sender:
+			sender = prepend0x(sender)
+			skeleton["params"][0]["from"] = sender
+		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
-def get_accounts():
-	skeleton = '{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}'
-	r = requests.post(RPC_SERVER, data=skeleton)
-	accs = json.loads(r.text)['result']
-	for i in range(len(accs)):
-		accs[i] = accs[i].encode('ascii','ignore')
-	return accs
 
-def get_coinbase():
-	skeleton = '{"jsonrpc":"2.0","method":"eth_coinbase","params":[],"id":1}'
-	r = requests.post(RPC_SERVER, data=skeleton)
-	return json.loads(r.text)['result'].encode('ascii','ignore')
+	# Get the coinbase of the rpc server
+	def get_coinbase(self):
+		skeleton = {"jsonrpc":"2.0","method":"eth_coinbase","params":[],"id":64}
+		return self.make_request(skeleton)['result'].encode('ascii','ignore')
+
+	def set_coinbase(self, addr):
+		addr = prepend0x(addr)
+		skeleton = {"jsonrpc":"2.0","method":"eth_setCoinbase","params":[addr],"id":66}
+		self.make_request(skeleton)
+
+	def get_accounts(self):
+		skeleton = '{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}'
+		accs = self.make_request(skeleton)['result']
+		for i in range(len(accs)):
+			accs[i] = accs[i].encode('ascii','ignore')
+		return accs
+
+	def get_coinbase(self):
+		skeleton = '{"jsonrpc":"2.0","method":"eth_coinbase","params":[],"id":1}'
+		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
 
 ####################
@@ -153,10 +153,13 @@ def remove0x(s):
 	return s
 
 # Make s have 64 hex characters
-def padzeros(s):
+def padzeros(s, end=False):
 	s = remove0x(s)
 	while len(s) < 64:
-		s = '0' + s
+		if not end:
+			s = '0' + s
+		else:
+			s = s + '0'
 	return s
 
 # Convert to int if possible
@@ -187,6 +190,66 @@ def encode_abi(sig, args=[]):
 	return prepend0x(abi)
 
 
+##########################
+## Contract convenience ##
+##########################
+
+class Contract():
+	def __init__(self, addr, abi, rpc=None):
+		self.addr = addr
+		self.abi = abi
+		self.type_map ={}
+		for f in abi:
+			fname = f['name']
+			type_map[fname] = [a['type'] for a in f['inputs']]
+		self.rpc = rpc
+
+	# Compute the abi data (encode_abi)
+	def abi_to_hex(self, fname, args):
+
+		# Create hash of signature
+		sig = fname + '('
+		types = self.type_map[fname]
+		sig += ','.join(types)
+		sig += ')'
+		retval = sha3.sha3_256(sig).hexdigest()[:8]
+
+		# Append arguments
+		for i in range(len(types)):
+			typ = types[i]
+			arg = args[i]
+			if typ in ['uint256','hash256','address']:
+				if isinstance(arg, str):
+					retval += padzeros(arg)
+				elif isinstance(arg, int):
+					retval += padzeros(hex(arg))
+			elif typ == 'bool':
+				if arg:
+					retval += padzeros('1')
+				else:
+					retval += padzeros('0')
+			elif typ.startswith('string'):
+				retval += padzeros(arg.encode('hex'))
+
+		# Exit
+		return retval
+
+	# Make call
+	def call(self, fname, args):
+		data = self.abi_to_hex(fname, args)
+		return self.rpc.call(self.addr, None, None, data=data)
+
+	# Make transaction
+	def transact(self, ethval, fname, args, sender=None):
+		data = self.abi_to_hex(fname, args)
+		return self.rpc.transact(
+			self.addr, ethval, None, None, data=data, sender=sender)
+
+
+
+#########
+## CLI ##
+#########
 
 # docopt is awesome
 usage_string = \
@@ -217,7 +280,7 @@ if __name__ == "__main__":
 	# Initialize contract
 	host = args.get('--host') or DEFAULT_HOST
 	port = int(args.get('--port') or DEFAULT_PORT)
-	RPC_SERVER = "http://{0}:{1}".format(host, str(port))
+	rpc = EthRpc(host, port)
 
 	# Get optional and common args
 	sender = args.get("--sender") or None
@@ -233,34 +296,34 @@ if __name__ == "__main__":
 		r = encode_abi(sig, params)
 		sys.stdout.write(str(r))
 	elif args['get_balance']:
-		r = get_balance(args["<addr>"])
+		r = rpc.get_balance(args["<addr>"])
 		sys.stdout.write(str(r))
 	elif args['get_storage']:
-		r = get_storage(args["<addr>"])
+		r = rpc.get_storage(args["<addr>"])
 		sys.stdout.write(str(r))
 	elif args['call']:
-		r = call(args["<recip>"], sig, params, data=data)
+		r = rpc.call(args["<recip>"], sig, params, data=data)
 		sys.stdout.write(str(r))
 	elif args['get_index']:
-		r = get_index(args["<addr>"], try_int(args["<index>"]))
+		r = rpc.get_index(args["<addr>"], try_int(args["<index>"]))
 		sys.stdout.write(str(r))
 	elif args['transact']:
-		r = transact(
+		r = rpc.transact(
 			args["<recip>"], try_int(args["<ethval>"]),
 			sig, params, data=data, sender=sender)
 		sys.stdout.write(str(r))
 	elif args['create_contract']:
-		r = create_contract(
+		r = rpc.create_contract(
 			try_int(args["<ethval>"]),
 			args["<code>"],
 			args=params,
 			sender=sender)
 		sys.stdout.write(str(r))
 	elif args['get_accounts']:
-		r = get_accounts()
+		r = rpc.get_accounts()
 		sys.stdout.write(str(r))
 	elif args['get_coinbase']:
-		r = get_coinbase()
+		r = rpc.get_coinbase()
 		sys.stdout.write(str(r))
 
 
