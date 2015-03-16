@@ -4,6 +4,7 @@ import json
 import requests
 import sha3
 from docopt import docopt
+from ethutils import prepend0x, remove0x, padzeros, try_int
 
 
 # Defaults
@@ -133,42 +134,6 @@ class EthRpc():
 		skeleton = '{"jsonrpc":"2.0","method":"eth_coinbase","params":[],"id":1}'
 		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
-
-####################
-## Helper methods ##
-####################
-
-# Add the 0x prefix to addresses
-def prepend0x(s):
-	if not s:
-		return '0x0'
-	if not s.startswith('0x'):
-		s = '0x' + s
-	return s
-
-# Remove the 0x prefix from hex
-def remove0x(s):
-	if s.startswith('0x'):
-		s = s[2:]
-	return s
-
-# Make s have 64 hex characters
-def padzeros(s, end=False):
-	s = remove0x(s)
-	while len(s) < 64:
-		if not end:
-			s = '0' + s
-		else:
-			s = s + '0'
-	return s
-
-# Convert to int if possible
-def try_int(i):
-	try:
-		int(i)
-		return int(i)
-	except:
-		return i
 
 
 ########################
