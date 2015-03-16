@@ -5,7 +5,7 @@ from setuptools import setup
 setup(
 	name='SchellingCoin',
 	version='0.1',
-	package_dir={ 'pyschelling':'src/pyschelling' },
+	package_dir={ 'pyschelling':'src/schango/pyschelling' },
 	# py_modules=['ethrpc'],
 	install_requires=[
 		'docopt',
