@@ -10,6 +10,7 @@ setup(
 	install_requires=[
 		'docopt',
 		'requests',
+		'pybitcointools',
 		'pysha3'],
 	url='https://github.com/pdz8/schelling',
 	description='Contains components necessary to run SchellingCoin backend.',

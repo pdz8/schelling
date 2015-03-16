@@ -104,6 +104,11 @@ contract DjBallot {
         owner = msg.sender;
     }
 
+    // Signature of constructor hack
+    function constructor_sig(
+            address _pool, uint256 _maxOption, uint256 _downPayment,
+            uint256 _startTime, uint256 _votingPeriod, uint256 _revealPeriod) {}
+
 
     // Register a trigger for another contract
     function wait_for_decision() {

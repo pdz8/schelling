@@ -13,6 +13,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8080
 DEFAULT_GASPRICE = 10 ** 12
 DEFAULT_STARTGAS = 10000 # ,"gas":DEFAULT_STARTGAS,"gasPrice":DEFAULT_GASPRICE
+CONSTRUCTOR_SIG = 'constructor_sig'
 
 
 #################
@@ -170,11 +171,12 @@ class Contract():
 		self.rpc = rpc
 
 	# Compute the abi data (encode_abi)
-	def abi_to_hex(self, fname, args):
+	@classmethod
+	def abi_to_hex(cls, type_map, fname, args):
 
 		# Create hash of signature
 		sig = fname + '('
-		types = self.type_map[fname]
+		types = type_map[fname]
 		sig += ','.join(types)
 		sig += ')'
 		retval = sha3.sha3_256(sig).hexdigest()[:8]
@@ -199,14 +201,24 @@ class Contract():
 		# Exit
 		return retval
 
+	# Create a contract
+	@classmethod
+	def create(cls, code, args, abi, rpc, sender=None):
+		c = cls(None, abi, rpc=rpc)
+		if not CONSTRUCTOR_SIG in c.type_map:
+			return None
+		code += cls.abi_to_hex(c.type_map, CONSTRUCTOR_SIG, args)[8:]
+		c.addr = rpc.create_contract(0, code, args=[], sender=sender)
+		return c
+
 	# Make call
 	def call(self, fname, args):
-		data = self.abi_to_hex(fname, args)
+		data = Contract.abi_to_hex(self.type_map, fname, args)
 		return self.rpc.call(self.addr, None, None, data=data)
 
 	# Make transaction
 	def transact(self, ethval, fname, args, sender=None):
-		data = self.abi_to_hex(fname, args)
+		data = Contract.abi_to_hex(self.type_map, fname, args)
 		return self.rpc.transact(
 			self.addr, ethval, None, None, data=data, sender=sender)
 
