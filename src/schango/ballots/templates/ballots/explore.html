@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content_title %}
+Explore Ballots
+{% endblock %}
+
+{% block content %}
+{% if ballot_list %}
+  <table class="table">
+    <thead>
+      <th>Question</th>
+      {# <th>Address</th> #}
+      <th>Start Time</th>
+      <th>Deposit</th>
+    </thead>
+    <tbody>
+      {% for b in ballot_list %}
+      <tr>
+        <td>{{ b.question }}</td>
+        {# <td>{{ b.address }}</td> #}
+        <td>{{ b.start_time }}</td>
+        <td>{{ b.down_payment }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+
+  </table class="table">
+{% else %}
+  <div class="alert alert-warning">
+    <strong>No results matched your query.</strong>
+  </div>
+{% endif %}
+{% endblock %}
