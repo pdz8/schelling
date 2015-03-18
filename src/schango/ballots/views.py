@@ -6,7 +6,7 @@ from django import forms
 from django.utils import timezone
 
 from pyschelling import ethutils as eu
-from ballots.models import Ballot
+from ballots.models import Ballot, MAX_QUESTION_LEN
 
 
 ######################
@@ -14,8 +14,24 @@ from ballots.models import Ballot
 ######################
 
 def ask(request):
-	context = {}
-	return render(request, 'ballots/ask.html', context)
+
+	# TODO: detect whether user may deposit
+	# This involves making a lookup call to the factory
+
+	# Present empty form
+	if request.method == 'GET':
+		context = {
+			'f': AskForm()
+		}
+		return render(request, 'ballots/ask.html', context)
+
+	# Assume POST
+	else:
+		# TODO:
+		# 1. Validate user create deposit
+		# 2. Create contract - resetting deposit
+		# 3. Redirect to vote page
+		return redirect('ballots:explore')
 
 
 def explore(request):
@@ -92,5 +108,41 @@ class CommitForm(RevealForm):
 			widget=forms.TextInput(attrs={'class':'form-control'}))
 			# widget=forms.PasswordInput(attrs={'class':'form-control'}))
 
-# class CreateForm(forms.Form):
+class AskForm(forms.Form):
+	question = forms.CharField(
+			label='Question',
+			required=True,
+			max_length=MAX_QUESTION_LEN,
+			widget=forms.Textarea(attrs={'class':'form-control'}))
+	max_option = forms.IntegerField(
+			label='Max Option',
+			initial=2,
+			required=True,
+			min_value=2,
+			widget=forms.NumberInput(attrs={'class':'form-control'}))
+	down_payment = forms.DecimalField(
+			label='Deposit (ether)',
+			initial=Decimal(1.5),
+			min_value=Decimal(0),
+			required=True,
+			decimal_places=18,
+			max_digits=100,
+			widget=forms.NumberInput(attrs={
+					'class':'form-control',
+					'step':'0.5'}))
+	start_time = forms.DateTimeField(
+			label='Start Time',
+			initial=timezone.now(),
+			required=True,
+			widget=forms.DateTimeInput(attrs={'class':'form-control'}))
+	commit_period = forms.TimeField(
+			label='Commit Period',
+			initial=datetime.timedelta(days=1),
+			required=True,
+			widget=forms.TimeInput(attrs={'class':'form-control'}))
+	reveal_period = forms.TimeField(
+			label='Reveal Period',
+			initial=datetime.timedelta(days=1),
+			required=True,
+			widget=forms.TimeInput(attrs={'class':'form-control'}))
 

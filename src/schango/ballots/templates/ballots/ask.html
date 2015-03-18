@@ -9,5 +9,47 @@ active
 {% endblock %}
 
 {% block content %}
-<p>Yerrrrrrr</p>
+<form role="form" action="{% url 'ballots:ask' %}" method="post">
+  {% csrf_token %}
+
+  <div class="form-group">
+    {{ f.question.errors }}
+    {{ f.question.label_tag }}
+    {{ f.question }}
+  </div>
+
+  <div class="row">
+    <div class="form-group col-sm-4">
+      {{ f.max_option.errors }}
+      {{ f.max_option.label_tag }}
+      {{ f.max_option }}
+    </div>
+    <div class="form-group col-sm-8">
+      {{ f.down_payment.errors }}
+      {{ f.down_payment.label_tag }}
+      {{ f.down_payment }}
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="form-group col-sm-4">
+      {{ f.start_time.errors }}
+      {{ f.start_time.label_tag }}
+      {{ f.start_time }}
+    </div>
+    <div class="form-group col-sm-4">
+      {{ f.commit_period.errors }}
+      {{ f.commit_period.label_tag }}
+      {{ f.commit_period }}
+    </div>
+    <div class="form-group col-sm-4">
+      {{ f.reveal_period.errors }}
+      {{ f.reveal_period.label_tag }}
+      {{ f.reveal_period }}
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-default">Create Contract</button>
+
+</form>
 {% endblock %}

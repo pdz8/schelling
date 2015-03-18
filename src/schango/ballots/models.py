@@ -7,6 +7,13 @@ import pyschelling.ethutils as eu
 import pyschelling.contractbin as cb
 
 
+############### TODO: move elsewhere
+## Constants ##
+###############
+
+MAX_QUESTION_LEN = 5*32
+
+
 #######################
 ## Model definitions ##
 #######################
@@ -16,7 +23,7 @@ class Ballot(models.Model):
 	address = models.CharField(
 			max_length=42)
 	question = models.CharField(
-			max_length=5*32)
+			max_length=MAX_QUESTION_LEN)
 	start_time = models.DateTimeField()
 	reveal_time = models.DateTimeField()
 	redeem_time = models.DateTimeField()
