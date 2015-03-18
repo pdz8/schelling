@@ -13,8 +13,9 @@ from ballots.models import Ballot
 ## Request handlers ##
 ######################
 
-def create(request):
-	pass
+def ask(request):
+	context = {}
+	return render(request, 'ballots/ask.html', context)
 
 
 def explore(request):
@@ -61,6 +62,11 @@ def vote(request, address=""):
 		return redirect('ballots:hex', address=address)
 
 
+def about(request):
+	context = {}
+	return render(request, 'ballots/about.html', context)
+
+
 ###########
 ## Forms ##
 ###########
@@ -85,4 +91,6 @@ class CommitForm(RevealForm):
 			min_length=64,
 			widget=forms.TextInput(attrs={'class':'form-control'}))
 			# widget=forms.PasswordInput(attrs={'class':'form-control'}))
-	
+
+# class CreateForm(forms.Form):
+
