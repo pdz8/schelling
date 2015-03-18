@@ -13,12 +13,17 @@ import pyschelling.contractbin as cb
 
 # Stored representation of ballots
 class Ballot(models.Model):
-	address = models.CharField(max_length=42)
-	question = models.CharField(max_length=5*32)
+	address = models.CharField(
+			max_length=42)
+	question = models.CharField(
+			max_length=5*32)
 	start_time = models.DateTimeField()
 	reveal_time = models.DateTimeField()
 	redeem_time = models.DateTimeField()
-	down_payment = models.DecimalField(max_digits=100,decimal_places=2)
+	down_payment = models.DecimalField(
+			'Ether deposit',
+			max_digits=100,
+			decimal_places=18)
 	max_choice = models.IntegerField()
 
 	# Get string representation

@@ -6,18 +6,21 @@ Explore Ballots
 
 {% block content %}
 {% if ballot_list %}
-  <table class="table">
+  <table class="table table-hover">
     <thead>
       <th>Question</th>
       {# <th>Address</th> #}
       <th>Start Time</th>
-      <th>Deposit</th>
+      <th>Deposit (ether)</th>
     </thead>
     <tbody>
       {% for b in ballot_list %}
       <tr>
-        <td>{{ b.question }}</td>
-        {# <td>{{ b.address }}</td> #}
+        <td>
+          <a href="{% url 'ballots:hex' b.address %}">
+            {{ b.question }}
+          </a>
+        </td>
         <td>{{ b.start_time }}</td>
         <td>{{ b.down_payment }}</td>
       </tr>

@@ -11,4 +11,7 @@ urlpatterns = patterns('',
 	url(r'^explore/', ballots.views.explore, name='explore'),
 	url(r'^hex/(0x)?(?P<address>[0-9a-fA-F]{40})/', 
 			ballots.views.vote, name='hex'),
+
+	# Default index
+	url(r'^$', ballots.views.explore),
 )
