@@ -5,7 +5,8 @@ TEST PRIVKEY
 74b12683b0c444efe79aa1e480c624f7dc4772f4c14ac2bd783b0ed8c4a197f6
 
 PEER
-poc-7.ethdev.com:30303
+poc-8.ethdev.com:30303 (5.1.83.225)
+poc-9.ethdev.com:30303 (5.1.83.226)
 
 DIG PEER
 5.1.83.225
@@ -20,3 +21,4 @@ e6389d124a71c6f5f671cbc0a5a6fb22aac80ff4
 
 ETH CONNECT
 connect 5.1.83.225 30303
+
