@@ -7,7 +7,7 @@ POC_PORT="30303"
 
 # Aliases
 alias solout="solc --binary stdout --optimize 1 --input-file"
-alias ethcon="eth -j -r $POC9_IP -p $POC_PORT"
+alias ethcon="eth -j -r $POC8_IP -p $POC_PORT"
 
 # Add to PATH for convenience
 if [[ -f "schellrc.sh" ]]; then

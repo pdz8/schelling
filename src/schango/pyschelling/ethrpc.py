@@ -21,8 +21,9 @@ CONSTRUCTOR_SIG = 'constructor_sig'
 #################
 
 class EthRpc():
-	def __init__(self, host, port):
+	def __init__(self, host, port, poc=8):
 		self.server = "http://{0}:{1}".format(host, str(port))
+		self.poc = poc
 
 	# Do a json request
 	def make_request(self, skeleton):
@@ -33,7 +34,8 @@ class EthRpc():
 	def get_balance(self, addr):
 		addr = prepend0x(addr)
 		skeleton = {"jsonrpc":"2.0","method":"eth_balanceAt","params":[addr],"id":1}
-		# skeleton = {"jsonrpc":"2.0","method":"eth_getBalance","params":[addr,"-0x1"],"id":1}
+		if self.poc == 9:
+			skeleton = {"jsonrpc":"2.0","method":"eth_getBalance","params":[addr,"latest"],"id":1}
 		h = self.make_request(skeleton)['result'].encode('ascii','ignore')
 		return int(h, 16)
 
@@ -41,7 +43,8 @@ class EthRpc():
 	def get_storage(self, addr):
 		addr = prepend0x(addr)
 		skeleton = {"jsonrpc":"2.0","method":"eth_storageAt","params":[addr],"id":1}
-		# skeleton = {"jsonrpc":"2.0","method":"eth_getStorage","params":[addr,"-0x1"],"id":1}
+		if self.poc == 9:
+			skeleton = {"jsonrpc":"2.0","method":"eth_getStorage","params":[addr,"latest"],"id":1}
 		store = self.make_request(skeleton)['result']
 		retval = {}
 		for k in store:
@@ -56,7 +59,8 @@ class EthRpc():
 		if not isinstance(index, str):
 			index = hex(index)
 		skeleton = {"jsonrpc":"2.0","method":"eth_stateAt","params":[addr,index],"id":1}
-		# skeleton = {"jsonrpc":"2.0","method":"eth_getStorageAt","params":[addr,index,"-0x1"],"id":1}
+		if self.poc == 9:
+			skeleton = {"jsonrpc":"2.0","method":"eth_getStorageAt","params":[addr,index,"latest"],"id":1}
 		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
 	# Do a simple call (getters)
@@ -87,7 +91,8 @@ class EthRpc():
 
 		# Make call
 		skeleton = {"jsonrpc":"2.0","method":"eth_transact","params":[{"value":ethval,"to":recip,"data":data}],"id":1}
-		# skeleton = {"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"value":ethval,"to":recip,"data":data}],"id":1}
+		if self.poc == 9:
+			skeleton = {"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"value":ethval,"to":recip,"data":data}],"id":1}
 		if sender:
 			sender = prepend0x(sender)
 			skeleton["params"][0]["from"] = sender
@@ -108,6 +113,8 @@ class EthRpc():
 
 		# Format and send request
 		skeleton = {"jsonrpc":"2.0","method":"eth_transact","params":[{"value":ethval,"code":code}],"id":1}
+		if self.poc == 9:
+			skeleton = {"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"value":ethval,"code":code}],"id":1}
 		if sender:
 			sender = prepend0x(sender)
 			skeleton["params"][0]["from"] = sender
@@ -125,14 +132,14 @@ class EthRpc():
 		self.make_request(skeleton)
 
 	def get_accounts(self):
-		skeleton = '{"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}'
+		skeleton = {"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}
 		accs = self.make_request(skeleton)['result']
 		for i in range(len(accs)):
 			accs[i] = accs[i].encode('ascii','ignore')
 		return accs
 
 	def get_coinbase(self):
-		skeleton = '{"jsonrpc":"2.0","method":"eth_coinbase","params":[],"id":1}'
+		skeleton = {"jsonrpc":"2.0","method":"eth_coinbase","params":[],"id":64}
 		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
 

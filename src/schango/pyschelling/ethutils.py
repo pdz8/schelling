@@ -107,3 +107,11 @@ def try_int(i):
 		return int(i)
 	except:
 		return i
+
+# Is this a private key
+def is_priv(s):
+	return is_hex(s) and (len(remove0x(s)) == 64)
+
+# Is this a public key
+def is_pub(s):
+	return is_hex(s) and (len(remove0x(s)) == 40)
