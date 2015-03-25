@@ -24,7 +24,8 @@ DEBUG = True
 
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = []
+# TODO: Change this to final domain!
+ALLOWED_HOSTS = ['.scoin.com']
 
 
 # Application definition
@@ -37,6 +38,7 @@ INSTALLED_APPS = (
 	'django.contrib.messages',
 	'django.contrib.staticfiles',
 	'ballots',
+	'social.apps.django_app.default',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -82,3 +84,33 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+#############################
+## Facebook authentication ##
+#############################
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+	'django.contrib.auth.context_processors.auth',
+	'django.core.context_processors.debug',
+	'django.core.context_processors.i18n',
+	'django.core.context_processors.media',
+	'django.core.context_processors.static',
+	'django.core.context_processors.tz',
+	'django.contrib.messages.context_processors.messages',
+	'social.apps.django_app.context_processors.backends',
+	'social.apps.django_app.context_processors.login_redirect',
+)
+
+AUTHENTICATION_BACKENDS = (
+	'social.backends.facebook.FacebookOAuth2',
+	'django.contrib.auth.backends.ModelBackend',
+)
+
+SOCIAL_AUTH_FACEBOOK_KEY = '1565849607002326'
+SOCIAL_AUTH_FACEBOOK_SECRET = 'dff1dea4cf9ecc112b7a3b8281255945'
+SOCIAL_AUTH_FACEBOOK_SCOPE = []
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {}
+
+
+

@@ -1,6 +1,7 @@
 import datetime
 
 from django.db import models
+from django.contrib.auth.models import User
 
 import pyschelling.ethrpc as er
 import pyschelling.ethutils as eu
@@ -36,4 +37,11 @@ class Ballot(models.Model):
 	# Get string representation
 	def __str__(self):
 		return self.address
-	
+
+# Represents an Ethereum account
+class EthAccount(models.Model):
+	address = models.CharField(
+			max_length=42)
+	secret_key = models.CharField(
+			max_length=66)
+	user = models.OneToOneField(User)

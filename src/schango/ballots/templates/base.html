@@ -15,7 +15,8 @@
 
   <h1>SchellingCoin <small>on Ethereum</small></h1>
   <nav class="navbar navbar-inverse">
-    <div class="container">
+    <div class="container-fluid">
+
       <ul class="nav navbar-nav">
         <li class="{% block explore_tab_class %}{% endblock %}">
           <a href="{% url 'ballots:explore' %}">Explore</a>
@@ -27,6 +28,31 @@
           <a href="{% url 'ballots:about' %}">About</a>
         </li>
       </ul>
+
+      <ul class="nav navbar-nav navbar-right">
+        {% if user and user.id %}
+          <li class="{% block acc_tab_class %}{% endblock %}">
+            <a href="{% url 'ballots:account' %}">
+              <span class="glyphicon glyphicon-user"></span>
+              My Account
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'ballots:logout' %}">
+              <span class="glyphicon glyphicon-log-out"></span>
+              Logout
+            </a>
+          </li>
+        {% else %}
+          <li>
+            <a href="{% url 'social:begin' 'facebook' %}?next={% url 'ballots:account' %}">
+              <span class="glyphicon glyphicon-log-in"></span>
+              FB Login
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+
     </div>
   </nav>
 

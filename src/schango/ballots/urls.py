@@ -10,6 +10,8 @@ urlpatterns = patterns('',
 	url(r'^hex/(0x)?(?P<address>[0-9a-fA-F]{40})/', 
 			ballots.views.vote, name='hex'),
 	url(r'^about/', ballots.views.about, name='about'),
+	url(r'^account/', ballots.views.account, name='account'),
+	url(r'^logout/', ballots.views.logout, name='logout'),
 
 	# Alternatives
 	url(r'^create/', ballots.views.ask, name='create'),

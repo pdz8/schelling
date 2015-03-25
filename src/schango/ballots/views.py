@@ -4,25 +4,85 @@ import datetime
 from django.shortcuts import render, get_object_or_404, redirect
 from django import forms
 from django.utils import timezone
+from django.core.urlresolvers import reverse
+import django.contrib.auth as auth
 
 from pyschelling import ethutils as eu
-from ballots.models import Ballot, MAX_QUESTION_LEN
+from ballots.models import Ballot, MAX_QUESTION_LEN, EthAccount
 
 
 ######################
 ## Request handlers ##
 ######################
 
+def account(request):
+	user = request.user
+	context = {
+		'request': request,
+		'user': user,
+		'f': None,
+	}
+
+	# Redirect to force user login
+	if not user or not user.id:
+		url = (reverse('social:begin', args=['facebook'])
+				+ '?next='
+				+ reverse('ballots:account'))
+		return redirect(url)
+
+	# Provide empty form or old values
+	if request.method == 'GET':
+		secret_key = ''
+		try:
+			secret_key = user.ethaccount.secret_key
+		except:
+			pass
+		context['f'] = AccountForm({ 'secret_key': secret_key })
+		return render(request, 'ballots/account.html', context)
+
+	# Set new secret key
+	else:
+		f = AccountForm(request.POST)
+		context['f'] = f
+		if f.is_valid():
+			secret_key = f.cleaned_data['secret_key']
+			address = eu.priv_to_addr(secret_key)
+			if not hasattr(user, 'ethaccount'):
+				ea = EthAccount(
+						secret_key=secret_key,
+						address=address,
+						user=user)
+				ea.save()
+			else:
+				user.ethaccount.secret_key = secret_key
+				user.ethaccount.address = address
+				user.ethaccount.save()
+		return render(request, 'ballots/account.html', context)
+
+
+def logout(request):
+	auth.logout(request)
+	return redirect(reverse('ballots:explore'))
+
+
+def about(request):
+	context = {
+		'user': request.user,
+	}
+	return render(request, 'ballots/about.html', context)
+
+
 def ask(request):
 
 	# TODO: detect whether user may deposit
 	# This involves making a lookup call to the factory
+	context = {
+		'user': request.user,
+	}
 
 	# Present empty form
 	if request.method == 'GET':
-		context = {
-			'f': AskForm()
-		}
+		context['f'] = AskForm()
 		return render(request, 'ballots/ask.html', context)
 
 	# Assume POST
@@ -38,6 +98,7 @@ def explore(request):
 	ballot_list = Ballot.objects.all()
 	context = {
 		'ballot_list': ballot_list,
+		'user': request.user,
 	}
 	return render(request, 'ballots/explore.html', context)
 
@@ -51,6 +112,7 @@ def vote(request, address=""):
 		'b': b,
 		'submit_text': 'Submit',
 		'f': None,
+		'user': request.user,
 	}
 
 	# Detect with phase the ballot is in
@@ -78,14 +140,17 @@ def vote(request, address=""):
 		return redirect('ballots:hex', address=address)
 
 
-def about(request):
-	context = {}
-	return render(request, 'ballots/about.html', context)
-
-
 ###########
 ## Forms ##
 ###########
+
+class AccountForm(forms.Form):
+	secret_key = forms.CharField(
+			label='Secret Key (hex)',
+			max_length=66,
+			min_length=64,
+			widget=forms.TextInput(attrs={'class':'form-control'}))
+			# widget=forms.PasswordInput(attrs={'class':'form-control'}))
 
 class RevealForm(forms.Form):
 	vote_val = forms.IntegerField(
