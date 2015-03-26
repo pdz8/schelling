@@ -61,6 +61,37 @@ def recover(msg, (v,r,s)):
 	return pub_to_addr(pub)
 
 
+#################################
+## Conversion to and from u256 ##
+#################################
+
+# Split u256 hex into list of 32 bytes each
+def split_u256(h, arr_len=None):
+	h = remove0x(h)
+	retval = []
+	while h:
+		if len(h) >= 64:
+			retval += [h[:64]]
+			h = h[64:]
+		else:
+			retval += [h + ('0'*(64 - len(h)))]
+			h = None
+	if arr_len and arr_len > len(retval):
+		retval += ['0'*64]*(arr_len - len(retval))
+	return retval
+
+# Split a string into u256 arrays
+def str_to_u256(s, arr_len=None):
+	h = s.encode('hex')
+	return split_u256(h, arr_len=arr_len)
+
+# Take appended u256 integers and pull out the encoded string
+def str_from_u256(h):
+	s = (remove0x(h)).decode('hex')
+	s = s.replace('\x00','')
+	return s
+
+
 ####################
 ## Helper methods ##
 ####################

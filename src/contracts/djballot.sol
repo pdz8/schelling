@@ -6,7 +6,8 @@
 contract VoterPool {
 
     address owner;
-    mapping (address => bool) whitelist;
+    mapping (address => bool) whiteList;
+    mapping (address => uint256) lastEdit;
 
     function VoterPool() {
         owner = msg.sender;
@@ -14,22 +15,36 @@ contract VoterPool {
 
     function add(address entry) {
         if (tx.origin != owner) return;
-        whitelist[entry] = true;
+        whiteList[entry] = true;
     }
 
     function remove(address entry) {
         if (tx.origin != owner) return;
-        whitelist[entry] = false;
+        whiteList[entry] = false;
     }
 
     function update(address old, address nu) {
         if (tx.origin != owner) return;
-        whitelist[old] = false;
-        whitelist[nu] = true;
+        whiteList[old] = false;
+        whiteList[nu] = true;
+    }
+
+    // Let a non-owner update the pool (with the owner's permission)
+    function update_for(
+            address old, address nu, uint256 editTime, 
+            hash8 v, hash256 r, hash256 s) {
+        // Validate request
+        hash256 h = sha3(address(this), old, nu, editTime);
+        if (owner != ecrecover(h, v, r, s)) return;
+        if (editTime <= lastEdit[old] || editTime <= lastEdit[nu]) return;
+
+        // Execute update
+        whiteList[old] = false;
+        whiteList[nu] = true;
     }
 
     function is_voter(address entry) constant returns(bool ret) {
-        return true;
+        return whiteList[entry];
     }
 
     function kill_me() {
@@ -68,6 +83,7 @@ contract DjBallot {
 
     // TODO
     // When array support comes out allow the question string to be stored
+    string32[5] question;
 
     // List of address that have submitted hashes
     struct Participant {
@@ -94,7 +110,9 @@ contract DjBallot {
     // Constructor
     function DjBallot(
             address _pool, uint256 _maxOption, uint256 _downPayment,
-            uint256 _startTime, uint256 _votingPeriod, uint256 _revealPeriod) {
+            uint256 _startTime, uint256 _votingPeriod, uint256 _revealPeriod,
+            string32 _q0, string32 _q1, string32 _q2,
+            string32 _q3, string32 _q4) {
         pool = _pool;
         maxOption = _maxOption;
         downPayment = _downPayment;
@@ -102,12 +120,21 @@ contract DjBallot {
         revealTime = startTime + _votingPeriod;
         redeemTime = revealTime + _revealPeriod;
         owner = msg.sender;
+
+        // Get question
+        question[0] = _q0;
+        question[1] = _q1;
+        question[2] = _q2;
+        question[3] = _q3;
+        question[4] = _q4;
     }
 
     // Signature of constructor hack
     function constructor_sig(
             address _pool, uint256 _maxOption, uint256 _downPayment,
-            uint256 _startTime, uint256 _votingPeriod, uint256 _revealPeriod) {}
+            uint256 _startTime, uint256 _votingPeriod, uint256 _revealPeriod,
+            string32 _q0, string32 _q1, string32 _q2,
+            string32 _q3, string32 _q4) {}
 
 
     // Register a trigger for another contract
@@ -116,9 +143,23 @@ contract DjBallot {
         numWaiting++;
     }
 
+    // Submit hash for myself
+    function submit_hash(hash256 h) {
 
-    // Submit hash of vote
-    function submit_hash(hash256 h, hash8 v, hash256 r, hash256 s) {
+        // Validate input
+        if (block.timestamp < startTime || block.timestamp >= revealTime) return;
+        address a = tx.origin;
+        if (!VoterPool(pool).is_voter(a)) return;
+
+        // Update down payment
+        voterMap[a].paid += msg.value;
+
+        // Record hash
+        voterMap[a].h = h;
+    }
+
+    // Submit hash of vote for other account
+    function submit_hash_for(hash256 h, hash8 v, hash256 r, hash256 s) {
 
         // Assert correct time and voter
         if (block.timestamp < startTime || block.timestamp >= revealTime) return;
@@ -161,6 +202,9 @@ contract DjBallot {
             numRevealed++;
         }
     }
+    function reveal_hash(uint256 voteVal, uint256 key) {
+        this.reveal_vote_for(tx.origin, voteVal, key);
+    }
 
 
     // Tally up votes and redeem winners
@@ -199,23 +243,32 @@ contract DjBallot {
 
     
     // Getters
-    function getMaxOption() constant returns(uint256 ret) {
+    function get_max_option() constant returns(uint256 ret) {
         return maxOption;
     }
-    function getStartTime() constant returns(uint256 ret) {
+    function get_start_time() constant returns(uint256 ret) {
         return startTime;
     }
-    function getRevealTime() constant returns(uint256 ret) {
+    function get_reveal_time() constant returns(uint256 ret) {
         return revealTime;
     }
-    function getRedeemTime() constant returns(uint256 ret) {
+    function get_redeem_time() constant returns(uint256 ret) {
         return redeemTime;
     }
-    function getDownPayment() constant returns(uint256 ret) {
+    function get_down_payment() constant returns(uint256 ret) {
         return downPayment;
     }
-    function getDecision() constant returns(uint256 ret) {
+    function get_decision() constant returns(uint256 ret) {
         return decision;
+    }
+    function get_question() constant returns(
+            string32 ret_q0, string32 ret_q1, string32 ret_q2,
+            string32 ret_q3, string32 ret_q4) {
+        ret_q0 = question[0];
+        ret_q1 = question[1];
+        ret_q2 = question[2];
+        ret_q3 = question[3];
+        ret_q4 = question[4];
     }
 
 
