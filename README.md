@@ -1,4 +1,7 @@
-# SchellingCoin on Ethereum
+# CrowdAssert on Ethereum
+
+![Coinye](http://ic.tweakimg.net/ext/i/imagenormal/1393690309.png)
+![Nyan](http://www.wired.com/images_blogs/underwire/2014/01/nyan100.gif)
 
 ## Setup
 
@@ -10,29 +13,30 @@ You can then check that everything is installed properly by simply running:
 eth -h
 ```
 
-The provided link above also gives instructions for building from source. This is also advisable since Ethereum is still under development. Many weird bugs seem to disappear.
-
-The installation gives an assortment of clients and tools. So far we focus mostly on AlethZero (GUI) and `eth` (CLI).
-In the future we will ramp up in Mix, an IDE for Ethereum. It should alleviate many testing inconveniences.
-
 #### Creating an account
-The Ethereum clients currently generate a default account upon first use.
-For testing purposes however it is useful to generate more accounts.
-
 By far the friendliest way to setup Ethereum accounts is to use one of the GUI clients.
 AlethZero is included with cpp-ethereum and can serve this purpose.
 
-It currently seems like the CLI `eth` is unable to generate accounts past its coinbase.
-Thus in order to use it, you must first export keys from AlethZero and pass them as arguments to `eth`.
-Additionally each instance of `eth` only supports a single account at a time. Thus to run a multi-account scenario one must either use AlethZero or run multiple instances of `eth`, each listening on a different port.
+In `ethutils.py` we also provide methods for secret/public key generation.
 
 #### Python
-The server-side component of SchellingCoin is written in Python. Thus no compilation is needed for this project's source.
-
-In order to run the scripts it may be necessary to install some additional packages via `pip`, but this should not be trouble. There `setup.py` for this purpose (and for general installation):
+We provide scripts in place of `pyethereum`.  These do not have the all of the same functionality as `pyethereum`, but they are functional.
+Install them via:
 
 ```
 python setup.py install
+```
+
+The website for SchellingCoin is served through the Django framework. Version 1.7 is required:
+
+```
+pip install Django
+```
+
+Sybil attacks are prevent by require every user to register with a Facebook account. This then requires:
+
+```
+pip install python-social-auth
 ```
 
 #### Shell
@@ -47,36 +51,45 @@ source schellrc.sh
 Everything but `pyethereum` works on Windows (TODO: add shocked emoticon). This is a good compromise since `pyethereum` doesn't work well anywhere.
 
 
-## Ballot types
+## Schelling contracts
 
-We currently have multiple proposed protocols for SchellingCoin. A brief overview of them is given here. More can be seen in the contracts themselves.
+#### Voter pool
+Voter pools tell ballot contracts who is 'registered' to vote.
+We have a interface established for voter pools so that a ballot need only to call `is_voter(address)` on a pool to tell whether an address represents a registered voter.
+The implementation of `is_voter` can vary to include POW, hierarchies, fixed oracles, or no structure at all.
 
-#### Option ballot
-This is the standard SchellingCoin ballot which lets voters choose one of a set number of options (encoded as a number between 1 and n).
-The procedure is as follows:
+The voter pool we use for CrowdAssert is a simple whitelist. We control who gets let into the pool based on who registers their Facebook account with us.
+This is how we prevent Sybil attacks.
 
-1. Voters enroll into the voting pool of the ballot contract. The voting pools may have their own procedures necessary for enrollment. This may include proof-of-work, E-mail verification, etc. After enrollment voters wait for the ballot's start time.
-2. At its start time, the ballot allows enrolled voters to submit hashes of their vote along with down payments asserting the correctness of the vote. Hashes have the form
+#### Ballot
+As already mentioned, ballots are the contracts implementing the core SchellingCoin logic.
+We currently implement a simple ballot where users choose options between 1 and n. This procedure is as follows:
+
+1. A user proposes creates a ballot, specifying a question, deposit, start time, commit period, and reveal period.
+In order to incentivize participation, the creator ought to put some value of Ether into the contract as well.
+2. At its start time and until the end of the commit period the ballot opens up to hash submissions.
+During this time, registered voters may submit hashes of their votes and deposits to the ballot. Hashes have the form
 `
-hash256 h = sha256(tx.origin, address(this), voteVal, key);
+hash256 h = sha3(tx.origin, address(this), voteVal, key);
 `
-To emulate a commitment scheme, voters are required to hash a key with their votes. We cannot enforce that voters pick good keys or unique keys.
-3. The hash submission phase ends after a set amount of time and leads into the reveal phase. Here voters reveal the votes and keys used to create their hashes. If the hash checks out the vote is tallied.
-4. Finally, once the reveal phase is over, the contract enters the redeem phase. This lets voters who were in the majority redeem their winnings.
+To emulate a commitment scheme, voters are required to hash a key with their votes. We cannot enforce that voters pick good keys or unique keys but we will provide a service for doing this.
+3. The reveal phase begins when the commit phase ends. Here voters reveal the votes and keys used to create their hashes.
+4. At the end of the reveal phase votes are tallied. Voters that voted for the winning option are awarded a shared of all the deposits from voters and the question asker.
+
+##### Triggers
+In order to make ballots useful for other contracts (e.g. insurance or betting) the ballots implement a *trigger* interface.
+Such contracts can call `wait_for_decision()` on the ballot contract. This will register the contract as a *waiter* with the ballot.
+When the finishes tallying it will then iterate through all the registered waiters and call `trigger(uint256)` with the decided value.
 
 
-#### POW ballot
-A proof-of-work ballot is the same as a regular ballot except hashes must now be lower than some threshold.
-Thus a double-voter needs to have lots of computational power to submit all his votes.
-To further discourage cheating the down payment by the voters is moved to a enroll phase that occurs before hash submission. In order to cheat with many voters, you would have to put up a large sum in the beginning without a guarantee that all of your votes would be recorded.
+## TODO
+This is by no means a complete list. It's just here to prevent memory loss.
 
-It's worth noting here that the length of the hash submission phase and size of the POW threshold can be varied. Ideally they should be configured so that an average CPU would take most of the phase's period to submit a valid hash.
-
-#### Tree ballot
-The tree ballot is another close variation of the regular SchellingCoin ballot.
-The only difference here is that the ballot has the ability to spawn two new voting pool branches after its election is done. One pool is for majority voters and the other for minority voters.
-
-The hope for the tree ballot is that it creates more and more trustworthy voter pools each generation.
-Ballot-makers want to have honest pools voting on their questions. Thus they will pick the correct branch to base their ballot upon.
+* Implement voter tokens for each Facebook user. These replace account addresses in the voter pool and allow voters to rapidly change their voting address.
+Currently if a voter changes their registered address multiple times in a commit period, they can submit multiple hashes.
+ * Before tokens are implemented, we should enforce some hard-coded rate on address updates in pools. This can be done at the server or in the voter pool contract.
+ All ballot contracts would have to keep this hard-coded rate in mind when defining their commit periods. (Maybe we should hard-code the commit period?)
+* Enable good support for users to circumvent having to store their secret keys on our server. They could simply register their address to get into the voter pool and then directly interact with the Ethereum blockchain afterwards.
+* Check hashes of ballot code and allow ballots to be imported.
 
 
