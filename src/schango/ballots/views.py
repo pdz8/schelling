@@ -8,7 +8,21 @@ from django.core.urlresolvers import reverse
 import django.contrib.auth as auth
 
 from pyschelling import ethutils as eu
-from ballots.models import Ballot, MAX_QUESTION_LEN, EthAccount
+# from ballots.models import Ballot, MAX_QUESTION_LEN, EthAccount, UserWrapper
+import ballots.models as bm
+
+
+#############
+## Helpers ##
+#############
+
+def get_default_context(request):
+	context = {
+		'request': request,
+		'user': request.user,
+		'uw': bm.UserWrapper(request.user),
+	}
+	return context
 
 
 ######################
@@ -16,12 +30,8 @@ from ballots.models import Ballot, MAX_QUESTION_LEN, EthAccount
 ######################
 
 def account(request):
+	context = get_default_context(request)
 	user = request.user
-	context = {
-		'request': request,
-		'user': user,
-		'f': None,
-	}
 
 	# Redirect to force user login
 	if not user or not user.id:
@@ -48,7 +58,7 @@ def account(request):
 			secret_key = f.cleaned_data['secret_key']
 			address = eu.priv_to_addr(secret_key)
 			if not hasattr(user, 'ethaccount'):
-				ea = EthAccount(
+				ea = bm.EthAccount(
 						secret_key=secret_key,
 						address=address,
 						user=user)
@@ -66,9 +76,7 @@ def logout(request):
 
 
 def about(request):
-	context = {
-		'user': request.user,
-	}
+	context = get_default_context(request)
 	return render(request, 'ballots/about.html', context)
 
 
@@ -76,9 +84,7 @@ def ask(request):
 
 	# TODO: detect whether user may deposit
 	# This involves making a lookup call to the factory
-	context = {
-		'user': request.user,
-	}
+	context = get_default_context(request)
 
 	# Present empty form
 	if request.method == 'GET':
@@ -95,25 +101,20 @@ def ask(request):
 
 
 def explore(request):
-	ballot_list = Ballot.objects.all()
-	context = {
-		'ballot_list': ballot_list,
-		'user': request.user,
-	}
+	context = get_default_context(request)
+	context['ballot_list'] = ballot_list = bm.Ballot.objects.all()
 	return render(request, 'ballots/explore.html', context)
 
 
 def vote(request, address=""):
+	context = get_default_context(request)
 
 	# Retrieve ballot
-	address = eu.prepend0x(address)
-	b = get_object_or_404(Ballot, address=address)
-	context = {
-		'b': b,
-		'submit_text': 'Submit',
-		'f': None,
-		'user': request.user,
-	}
+	address = eu.remove0x(address)
+	b = get_object_or_404(bm.Ballot, address=address)
+	context['b'] = b
+	context['submit_text'] = 'Submit'
+	context['f'] = None
 
 	# Detect with phase the ballot is in
 	dt = timezone.now()
@@ -177,7 +178,7 @@ class AskForm(forms.Form):
 	question = forms.CharField(
 			label='Question',
 			required=True,
-			max_length=MAX_QUESTION_LEN,
+			max_length=bm.MAX_QUESTION_LEN,
 			widget=forms.Textarea(attrs={'class':'form-control'}))
 	max_option = forms.IntegerField(
 			label='Max Option',

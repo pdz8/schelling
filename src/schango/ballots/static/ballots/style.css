@@ -6,3 +6,18 @@
     margin-top: 0em;
     margin-bottom: 1em;
 }
+
+/* Pull dt to the left */
+.nice-dl dt{
+    float: left;
+    width: 15%;
+    margin-bottom: 1em;
+    padding-right: 1em;
+    text-align: right;
+    font-weight: bold;
+}
+.nice-dl dd{
+    float: left;
+    width: 85%;
+    margin-bottom: 1em;
+}

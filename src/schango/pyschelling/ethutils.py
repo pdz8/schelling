@@ -97,7 +97,7 @@ def str_from_u256(h):
 ####################
 
 # runs regex to detect hex
-hex_detect = re.compile('(0x)?([0-9a-fA-F])+')
+hex_detect = re.compile('^(0x)?([0-9a-fA-F])+$')
 def is_hex(h):
 	return hex_detect.match(h)
 

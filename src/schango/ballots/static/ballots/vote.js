@@ -6,7 +6,7 @@ $(document).ready(function(){
         if (switcher.text() == "Show more") {
             switcher.text("Show less")
         } else {
-            switcher.text("Show less")
+            switcher.text("Show more")
         }
         $("#tech_panel").toggle();
     });
