@@ -1,8 +1,10 @@
+#!/usr/bin/env python
 import os
 import sys
 import subprocess
 import time
-import threading
+from threading import Lock, Condition, Thread
+import socket
 
 import ethrpc
 import ethutils
@@ -100,7 +102,7 @@ class EthNode():
 
 		# Additional fields
 		self.rpc = ethrpc.EthRpc('localhost', json_port)
-		self.mutex = threading.Lock()
+		self.mutex = Lock()
 
 
 	# Initialize default node
@@ -197,3 +199,117 @@ class EthNode():
 		except:
 			pass
 
+
+##################
+## Node manager ##
+##################
+
+# This daemon process manages a ethnode
+# It allows setting the secret for the duration of a connection
+
+MANAGER_HOST = '127.0.0.1'
+MANAGER_PORT = 8089
+LOCK_MSG = 'LOCK'
+UNLOCK_MSG = 'UNLOCK'
+
+# Runs the simple protocol
+class ConnectionHandler(Thread):
+	def __init__(self, manager):
+		Thread.__init__(self)
+		self.setDaemon(True)
+		self.manager = manager
+
+	def run(self):
+		clientsocket = None
+		while True:
+			# Get the client connection
+			with self.manager.mutex:
+				while not self.manager.work_queue:
+					self.manager.work_ready.wait()
+				clientsocket = self.manager.work_queue.pop(0)
+
+			# Receive the secret key
+			secret_key = ''
+			while len(secret_key) < 64:
+				secret_key += clientsocket.recv(64 - len(secret_key))
+
+			# Set the secret key
+			self.manager.node.set_secret(secret_key)
+
+			# Acknowledge secret key
+			clientsocket.send(LOCK_MSG.encode('utf-8'))
+
+			# Receive unlock from client
+			data = ''
+			while len(data) < len(UNLOCK_MSG):
+				data += clientsocket.recv(len(UNLOCK_MSG) - len(data))
+
+
+# Server manager
+class ManagerServer:
+	def __init__(self, node):
+		self.node = node
+		self.work_queue = []
+		self.mutex = Lock()
+		self.work_ready = Condition(self.mutex)
+
+	def run_loop(self):
+		# Startup socket
+		serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		serversocket.bind((MANAGER_HOST, MANAGER_PORT))
+		serversocket.listen(5)
+
+		# Start worker
+		conn_handler = ConnectionHandler(self)
+		conn_handler.start()
+
+		# Actual loop
+		while True:
+			try:
+				(clientsocket, address) = serversocket.accept()
+			except:
+				break
+			with self.mutex:
+				self.work_queue.append(clientsocket)
+				self.work_ready.notify()
+
+
+# Client for server manager
+class ManagerClient:
+	def __init__(self, secret_key, host=MANAGER_HOST, port=MANAGER_PORT):
+		self.secret_key = secret_key
+		self.host = host
+		self.port = port
+		self.sock = None
+
+	def lock(self):
+		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.sock.connect((self.host, self.port))
+		self.sock.send(self.secret_key.encode('utf-8'))
+		data = ''
+		while len(data) < len(LOCK_MSG):
+			data += self.sock.recv(len(LOCK_MSG) - len(data))
+
+	def unlock(self):
+		self.sock.send(UNLOCK_MSG.encode('utf-8'))
+
+	def __enter__(self):
+		self.lock()
+
+	def __exit__(self, type, value, traceback):
+		self.unlock()
+		return True
+
+
+# Run from command line
+if __name__ == "__main__":
+	sys.stdout.write('Starting Ethereum node...\n')
+	node = EthNode.init_default()
+	if node.is_alive():
+		sys.stdout.write('Ethereum node running\n')
+	else:
+		sys.stderr.write('Failure: Could not start node\n')
+		sys.exit(1)
+	manager = ManagerServer(node)
+	sys.stdout.write('Starting manager server loop...\n')
+	manager.run_loop()
