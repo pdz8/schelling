@@ -5,6 +5,7 @@ import subprocess
 import time
 from threading import Lock, Condition, Thread
 import socket
+from docopt import docopt
 
 import ethrpc
 import ethutils
@@ -212,6 +213,20 @@ MANAGER_PORT = 8089
 LOCK_MSG = 'LOCK'
 UNLOCK_MSG = 'UNLOCK'
 
+# Verbose printing
+class VerbosePrinter():
+	def __init__(self, level):
+		self.level = level
+
+	def out(self, msg, threshold=1):
+		if threshold <= self.level:
+			sys.stdout.write(msg)
+
+	def err(self, msg, threshold=1):
+		if threshold <= self.level:
+			sys.stderr.write(msg)
+
+
 # Runs the simple protocol
 class ConnectionHandler(Thread):
 	def __init__(self, manager):
@@ -222,36 +237,44 @@ class ConnectionHandler(Thread):
 	def run(self):
 		clientsocket = None
 		while True:
-			# Get the client connection
-			with self.manager.mutex:
-				while not self.manager.work_queue:
-					self.manager.work_ready.wait()
-				clientsocket = self.manager.work_queue.pop(0)
+			try:
+				# Get the client connection
+				with self.manager.mutex:
+					while not self.manager.work_queue:
+						self.manager.work_ready.wait()
+					clientsocket = self.manager.work_queue.pop(0)
 
-			# Receive the secret key
-			secret_key = ''
-			while len(secret_key) < 64:
-				secret_key += clientsocket.recv(64 - len(secret_key))
+				# Receive the secret key
+				secret_key = ''
+				while len(secret_key) < 64:
+					secret_key += clientsocket.recv(64 - len(secret_key))
+				self.manager.vp.out('LOCK on ' + secret_key + '\n', 2)
 
-			# Set the secret key
-			self.manager.node.set_secret(secret_key)
+				# Set the secret key
+				self.manager.node.set_secret(secret_key)
 
-			# Acknowledge secret key
-			clientsocket.send(LOCK_MSG.encode('utf-8'))
+				# Acknowledge secret key
+				clientsocket.send(LOCK_MSG.encode('utf-8'))
 
-			# Receive unlock from client
-			data = ''
-			while len(data) < len(UNLOCK_MSG):
-				data += clientsocket.recv(len(UNLOCK_MSG) - len(data))
+				# Receive unlock from client
+				data = ''
+				while len(data) < len(UNLOCK_MSG):
+					data += clientsocket.recv(len(UNLOCK_MSG) - len(data))
+				clientsocket.close()
+				self.manager.vp.out('UNLOCK\n', 2)
+			except:
+				self.manager.vp.err('Error in ethnode conn-handler\n', 0)
+				break
 
 
 # Server manager
 class ManagerServer:
-	def __init__(self, node):
+	def __init__(self, node, vp=VerbosePrinter(1)):
 		self.node = node
 		self.work_queue = []
 		self.mutex = Lock()
 		self.work_ready = Condition(self.mutex)
+		self.vp = vp
 
 	def run_loop(self):
 		# Startup socket
@@ -292,6 +315,7 @@ class ManagerClient:
 
 	def unlock(self):
 		self.sock.send(UNLOCK_MSG.encode('utf-8'))
+		self.sock.close()
 
 	def __enter__(self):
 		self.lock()
@@ -300,16 +324,39 @@ class ManagerClient:
 		self.unlock()
 		return True
 
+#########
+## CLI ##
+#########
 
-# Run from command line
+usage_string = \
+"""
+Ethereum node manager
+
+Usage:
+  ethnode [--verbosity=<level>]
+
+Options:
+  -h --help
+  -v --verbosity=<level>
+"""
+
 if __name__ == "__main__":
-	sys.stdout.write('Starting Ethereum node...\n')
+	args = docopt(usage_string)
+
+	# Setup printer
+	verbosity = 1
+	if args['--verbosity'] is not None:
+		verbosity = int(args['--verbosity'])
+	vp = VerbosePrinter(verbosity)
+
+	# Start server
+	vp.out('Starting Ethereum node...\n')
 	node = EthNode.init_default()
 	if node.is_alive():
-		sys.stdout.write('Ethereum node running\n')
+		vp.out('Ethereum node running\n')
 	else:
-		sys.stderr.write('Failure: Could not start node\n')
+		vp.err('Failure: Could not start node\n', 0)
 		sys.exit(1)
-	manager = ManagerServer(node)
-	sys.stdout.write('Starting manager server loop...\n')
+	manager = ManagerServer(node, vp)
+	vp.out('Manager server loop started\n')
 	manager.run_loop()
