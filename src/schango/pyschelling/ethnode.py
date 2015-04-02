@@ -26,9 +26,9 @@ DEFAULT_LOAD_TIME = 4 # wait for eth to startup
 
 # Change defaults for Windows
 if sys.platform == 'win32':
-	pass
+	DEFAULT_ETH_EXE = 'eth'
 elif sys.platform == 'cygwin':
-	pass
+	DEFAULT_ETH_EXE = 'eth'
 
 # Default alternates
 ALT_DB_PATH = DEFAULT_DB_PATH + '2'
