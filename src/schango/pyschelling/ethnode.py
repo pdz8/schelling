@@ -54,6 +54,7 @@ class EthNode():
 			remote_port=DEFAULT_REMOTE_PORT,
 			secret=None,
 			interact=True,
+			mine=False,
 			no_output=True,
 			append_args=[],
 			load_time=DEFAULT_LOAD_TIME):
@@ -79,6 +80,8 @@ class EthNode():
 			self.args += ['-s', secret]
 		if interact:
 			self.args += ['-i']
+		if mine:
+			self.args += ['-m', 'on']
 		if append_args:
 			self.args += append_args
 		self.args += ['-v', '0']

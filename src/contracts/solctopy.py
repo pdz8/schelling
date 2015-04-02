@@ -2,6 +2,7 @@
 import sys
 import re
 from subprocess import Popen, PIPE
+from docopt import docopt
 
 
 # Convert solc output to python
@@ -36,24 +37,33 @@ def convert(str_in, str_out, condense=False):
 					str_out.write('\n')
 				abi = False
 
+#########
+## CLI ##
+#########
+
+usage_string = \
+"""
+Compile Solidity to Python output
+
+Usage:
+  solctopy [(<input> | <input> <output>)] [--min] [--compile]
+
+Options:
+  -h --help
+  -m --min
+  -c --compile
+"""
 
 if __name__ == "__main__":
+	args = docopt(usage_string)
+
 	# Get args
-	str_in = sys.stdin
-	str_out = sys.stdout
-	condense = False
-	comp = False
-	in_file = None
-	for arg in sys.argv[1:]:
-		if arg in ['-m','--min']:
-			condense = True
-		elif arg in ['-c','--compile']:
-			comp = True
-		elif str_in is sys.stdin:
-			in_file = arg
-			str_in = open(arg,'r')
-		elif str_out is sys.stdout:
-			str_out = open(arg,'w')
+	in_file = args.get('<input>') or None
+	out_file = args.get('<output>') or None
+	str_in = open(in_file,'r') if in_file else sys.stdin
+	str_out = open(out_file,'w') if out_file else sys.stdout
+	comp = args.get('--compile')
+	condense = args.get('--min')
 
 	# Compile
 	process = None

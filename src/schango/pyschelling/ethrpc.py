@@ -4,7 +4,7 @@ import json
 import requests
 import sha3
 from docopt import docopt
-from ethutils import prepend0x, remove0x, padzeros, try_int
+from ethutils import prepend0x, remove0x, padzeros, try_int, removeL
 
 
 # Defaults
@@ -21,7 +21,7 @@ CONSTRUCTOR_SIG = 'constructor_sig'
 #################
 
 class EthRpc():
-	def __init__(self, host, port, poc=8):
+	def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, poc=8):
 		self.server = "http://{0}:{1}".format(host, str(port))
 		self.poc = poc
 
@@ -82,6 +82,7 @@ class EthRpc():
 			ethval = hex(ethval)
 		else:
 			ethval = prepend0x(ethval)
+		ethval = removeL(ethval)
 		if data:
 			data = prepend0x(data)
 		elif sig:
@@ -107,6 +108,7 @@ class EthRpc():
 			ethval = hex(ethval)
 		else:
 			ethval = prepend0x(ethval)
+		ethval = removeL(ethval)
 		code = prepend0x(code)
 		if args:
 			code += encode_abi('', args)[2:]
@@ -168,22 +170,28 @@ def encode_abi(sig, args=[]):
 ##########################
 
 class Contract():
-	def __init__(self, addr, abi, rpc=None):
-		self.addr = addr
+	def __init__(self, abi, c_addr=None, rpc=None):
+		self.c_addr = c_addr
 		self.abi = abi
-		self.type_map ={}
+		self.input_types = {}
+		self.input_names = {}
+		self.output_types = {}
+		self.output_names = {}
 		for f in abi:
 			fname = f['name']
-			type_map[fname] = [a['type'] for a in f['inputs']]
+			self.input_types[fname] = [a['type'] for a in f['inputs']]
+			self.input_names[fname] = [a['name'] for a in f['inputs']]
+			self.output_types[fname] = [a['type'] for a in f['outputs']]
+			self.output_names[fname] = [a['name'] for a in f['outputs']]
 		self.rpc = rpc
 
 	# Compute the abi data (encode_abi)
 	@classmethod
-	def abi_to_hex(cls, type_map, fname, args):
+	def abi_to_hex(cls, input_types, fname, args):
 
 		# Create hash of signature
 		sig = fname + '('
-		types = type_map[fname]
+		types = input_types[fname]
 		sig += ','.join(types)
 		sig += ')'
 		retval = sha3.sha3_256(sig).hexdigest()[:8]
@@ -196,7 +204,7 @@ class Contract():
 				if isinstance(arg, str):
 					retval += padzeros(arg)
 				elif isinstance(arg, int):
-					retval += padzeros(hex(arg))
+					retval += padzeros(removeL(hex(arg)))
 			elif typ == 'bool':
 				if arg:
 					retval += padzeros('1')
@@ -210,24 +218,29 @@ class Contract():
 
 	# Create a contract
 	@classmethod
-	def create(cls, code, args, abi, rpc, sender=None):
-		c = cls(None, abi, rpc=rpc)
-		if not CONSTRUCTOR_SIG in c.type_map:
-			return None
-		code += cls.abi_to_hex(c.type_map, CONSTRUCTOR_SIG, args)[8:]
-		c.addr = rpc.create_contract(0, code, args=[], sender=sender)
+	def create(cls, code, args, abi, rpc, sender=None, ethval=0):
+		c = cls(abi, rpc=rpc)
+		if args:
+			if not CONSTRUCTOR_SIG in c.input_types:
+				return None
+			code += cls.abi_to_hex(c.input_types, CONSTRUCTOR_SIG, args)[8:]
+		c.c_addr = rpc.create_contract(ethval, code, args=[], sender=sender)
 		return c
 
 	# Make call
-	def call(self, fname, args):
-		data = Contract.abi_to_hex(self.type_map, fname, args)
-		return self.rpc.call(self.addr, None, None, data=data)
+	def call(self, fname, args, c_addr=None):
+		if not c_addr:
+			c_addr = self.c_addr
+		data = Contract.abi_to_hex(self.input_types, fname, args)
+		return self.rpc.call(c_addr, None, None, data=data)
 
 	# Make transaction
-	def transact(self, ethval, fname, args, sender=None):
-		data = Contract.abi_to_hex(self.type_map, fname, args)
+	def transact(self, fname, args, ethval=0, sender=None, c_addr=None):
+		if not c_addr:
+			c_addr = self.c_addr
+		data = Contract.abi_to_hex(self.input_types, fname, args)
 		return self.rpc.transact(
-			self.addr, ethval, None, None, data=data, sender=sender)
+			c_addr, ethval, None, None, data=data, sender=sender)
 
 
 

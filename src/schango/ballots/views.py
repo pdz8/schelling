@@ -21,6 +21,7 @@ def get_default_context(request):
 		'request': request,
 		'user': request.user,
 		'uw': bm.UserWrapper(request.user),
+		'error': '',
 	}
 	return context
 
@@ -201,14 +202,16 @@ class AskForm(forms.Form):
 			initial=timezone.now(),
 			required=True,
 			widget=forms.DateTimeInput(attrs={'class':'form-control'}))
-	commit_period = forms.TimeField(
-			label='Commit Period',
-			initial=datetime.timedelta(days=1),
+	commit_period = forms.IntegerField(
+			label='Commit Period (hours)',
+			initial=24,
 			required=True,
-			widget=forms.TimeInput(attrs={'class':'form-control'}))
-	reveal_period = forms.TimeField(
-			label='Reveal Period',
-			initial=datetime.timedelta(days=1),
+			min_value=1,
+			widget=forms.NumberInput(attrs={'class':'form-control'}))
+	reveal_period = forms.IntegerField(
+			label='Reveal Period (hours)',
+			initial=24,
 			required=True,
-			widget=forms.TimeInput(attrs={'class':'form-control'}))
+			min_value=1,
+			widget=forms.NumberInput(attrs={'class':'form-control'}))
 

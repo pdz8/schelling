@@ -143,6 +143,11 @@ contract DjBallot {
         numWaiting++;
     }
 
+    // Get hash directly from contract so there is no confusion
+    function get_hash(address a, uint256 voteVal, hash256 nonce_hash) constant returns(hash256 ret) {
+        return sha3(a, address(this), voteVal, nonce_hash);
+    }
+
     // Submit hash for myself
     function submit_hash(hash256 h) {
 
@@ -183,14 +188,14 @@ contract DjBallot {
 
 
     // Reveal hash value and tally the vote
-    function reveal_vote_for(address a, uint256 voteVal, uint256 key) {
+    function reveal_vote_for(address a, uint256 voteVal, hash256 nonce_hash) {
 
         // Validate input
         if (block.timestamp < revealTime || block.timestamp >= redeemTime) return;
         if (voteVal == 0 || voteVal > maxOption) return;
 
         // Check hash and vote if good
-        hash256 h = sha3(a, address(this), voteVal, key);
+        hash256 h = sha3(a, address(this), voteVal, nonce_hash);
         if (voterMap[tx.origin].h == h)
         {
             // Record vote
@@ -202,8 +207,8 @@ contract DjBallot {
             numRevealed++;
         }
     }
-    function reveal_hash(uint256 voteVal, uint256 key) {
-        this.reveal_vote_for(tx.origin, voteVal, key);
+    function reveal_hash(uint256 voteVal, hash256 nonce_hash) {
+        this.reveal_vote_for(tx.origin, voteVal, nonce_hash);
     }
 
 

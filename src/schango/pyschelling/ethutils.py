@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import sys
-import bitcoin as btc
-import sha3
 import re
+
+import sha3
+import bitcoin as btc
 from docopt import docopt
 
 # This emulates a lot of the functionality of the fabled pyethereum
@@ -14,8 +15,8 @@ from docopt import docopt
 ##################
 
 # sha3
-def keccak(x):
-	if is_hex(x):
+def keccak(x, treat_as_hex=True):
+	if is_hex(x) and treat_as_hex:
 		x = remove0x(x).decode('hex')
 	return sha3.sha3_256(x).hexdigest()
 
@@ -78,6 +79,8 @@ def split_u256(h, arr_len=None):
 			h = None
 	if arr_len and arr_len > len(retval):
 		retval += ['0'*64]*(arr_len - len(retval))
+	if arr_len and arr_len < len(retval):
+		retval = retval[:arr_len]
 	return retval
 
 # Split a string into u256 arrays
@@ -85,11 +88,23 @@ def str_to_u256(s, arr_len=None):
 	h = s.encode('hex')
 	return split_u256(h, arr_len=arr_len)
 
+# Split a string into string32's
+def str_to_string32(s, arr_len=None):
+	return [h.decode('hex') for h in str_to_u256(s, arr_len=arr_len)]
+
 # Take appended u256 integers and pull out the encoded string
 def str_from_u256(h):
 	s = (remove0x(h)).decode('hex')
 	s = s.replace('\x00','')
 	return s
+
+# Extract integer
+def int_from_u256(h):
+	return int(h,16)
+
+# Extract boolean
+def bool_from_u256(h):
+	return bool(int_from_u256(h))
 
 
 ####################
@@ -146,3 +161,40 @@ def is_priv(s):
 # Is this a public key
 def is_pub(s):
 	return is_hex(s) and (len(remove0x(s)) == 40)
+
+
+#########################
+## Currency conversion ##
+#########################
+
+DENOM_POW = {
+	'wei': 0,
+	'kwei': 3,
+	'mwei': 6,
+	'gwei': 9,
+	'szabo': 12,
+	'finney': 15,
+	'ether': 18,
+	'grand': 21,
+	'mether': 24,
+	'gether': 27,
+}
+
+# Convert ethereum denomination to Wei
+# Avoids floating point errors
+def denom_to_wei(val, denom='ether', hex_output=False):
+	sval = str(val)
+	if sval.find('.') < 0:
+		sval = sval + '.'
+	[whole,dec] = sval.split('.')
+	dpow = DENOM_POW[denom.lower()]
+	if dpow <= len(dec):
+		dec = dec[:dpow]
+	else:
+		dec += ('0' * (dpow - len(dec)))
+	i = int(whole + dec)
+	if hex_output:
+		return removeL(hex(i))
+	else:
+		return i
+
