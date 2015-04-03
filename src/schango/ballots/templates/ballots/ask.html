@@ -13,39 +13,39 @@ active
   {% csrf_token %}
 
   <div class="form-group">
-    {{ f.question.errors }}
     {{ f.question.label_tag }}
     {{ f.question }}
+    {{ f.question.errors }}
   </div>
 
   <div class="row">
     <div class="form-group col-sm-4">
-      {{ f.max_option.errors }}
       {{ f.max_option.label_tag }}
       {{ f.max_option }}
+      {{ f.max_option.errors }}
     </div>
     <div class="form-group col-sm-8">
-      {{ f.down_payment.errors }}
       {{ f.down_payment.label_tag }}
       {{ f.down_payment }}
+      {{ f.down_payment.errors }}
     </div>
   </div>
 
   <div class="row">
     <div class="form-group col-sm-4">
-      {{ f.start_time.errors }}
       {{ f.start_time.label_tag }}
       {{ f.start_time }}
+      {{ f.start_time.errors }}
     </div>
     <div class="form-group col-sm-4">
-      {{ f.commit_period.errors }}
       {{ f.commit_period.label_tag }}
       {{ f.commit_period }}
+      {{ f.commit_period.errors }}
     </div>
     <div class="form-group col-sm-4">
-      {{ f.reveal_period.errors }}
       {{ f.reveal_period.label_tag }}
       {{ f.reveal_period }}
+      {{ f.reveal_period.errors }}
     </div>
   </div>
 

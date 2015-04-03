@@ -15,6 +15,10 @@ urlpatterns = patterns('',
 
 	# Alternatives
 	url(r'^create/', ballots.views.ask, name='create'),
+	url(r'^vote/', ballots.views.vote, name='vote'),
+
+	# Testing/debugging/sandbox
+	url(r'^debug/', ballots.views.debug, name='debug'),
 
 	# Default index
 	url(r'^$', ballots.views.explore),

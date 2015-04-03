@@ -97,7 +97,7 @@ class EthRpc():
 		if sender:
 			sender = prepend0x(sender)
 			skeleton["params"][0]["from"] = sender
-		return self.make_request(skeleton)
+		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
 
 	# Make contract
@@ -200,7 +200,7 @@ class Contract():
 		for i in range(len(types)):
 			typ = types[i]
 			arg = args[i]
-			if typ in ['uint256','hash256','address']:
+			if typ in ['uint256','hash256','address'] or 'hash' in typ:
 				if isinstance(arg, str):
 					retval += padzeros(arg)
 				elif isinstance(arg, int):

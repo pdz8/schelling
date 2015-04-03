@@ -1,29 +1,19 @@
 from decimal import *
 import datetime
 
-from django.shortcuts import render, get_object_or_404, redirect
 from django import forms
-from django.utils import timezone
+from django.conf import settings
+# import django.contrib.auth as auth
+from django.contrib import messages, auth
 from django.core.urlresolvers import reverse
-import django.contrib.auth as auth
+from django.shortcuts import render, get_object_or_404, redirect
+from django.template import RequestContext
+from django.utils import timezone
 
 from pyschelling import ethutils as eu
-# from ballots.models import Ballot, MAX_QUESTION_LEN, EthAccount, UserWrapper
+from pyschelling import ethdjango as ed
 import ballots.models as bm
-
-
-#############
-## Helpers ##
-#############
-
-def get_default_context(request):
-	context = {
-		'request': request,
-		'user': request.user,
-		'uw': bm.UserWrapper(request.user),
-		'error': '',
-	}
-	return context
+import ballots.context_processors as cp
 
 
 ######################
@@ -31,11 +21,10 @@ def get_default_context(request):
 ######################
 
 def account(request):
-	context = get_default_context(request)
-	user = request.user
+	uw = cp.UserWrapper(request)
 
 	# Redirect to force user login
-	if not user or not user.id:
+	if not uw.user:
 		url = (reverse('social:begin', args=['facebook'])
 				+ '?next='
 				+ reverse('ballots:account'))
@@ -43,32 +32,39 @@ def account(request):
 
 	# Provide empty form or old values
 	if request.method == 'GET':
-		secret_key = ''
-		try:
-			secret_key = user.ethaccount.secret_key
-		except:
-			pass
-		context['f'] = AccountForm({ 'secret_key': secret_key })
-		return render(request, 'ballots/account.html', context)
+		secret_key = uw.secret_key
+		f = AccountForm()
+		if secret_key:
+			f = AccountForm({'secret_key': secret_key})
+		return render(request, 'ballots/account.html', {'f': f})
 
 	# Set new secret key
 	else:
 		f = AccountForm(request.POST)
-		context['f'] = f
 		if f.is_valid():
 			secret_key = f.cleaned_data['secret_key']
-			address = eu.priv_to_addr(secret_key)
-			if not hasattr(user, 'ethaccount'):
-				ea = bm.EthAccount(
-						secret_key=secret_key,
-						address=address,
-						user=user)
-				ea.save()
-			else:
-				user.ethaccount.secret_key = secret_key
-				user.ethaccount.address = address
-				user.ethaccount.save()
-		return render(request, 'ballots/account.html', context)
+
+			# Update ethereum
+			if settings.ENABLE_ETH:
+				success = ed.update_voter_for(
+						secret_key,
+						settings.VOTER_POOL_ADDRESS,
+						settings.ADMIN_SECRET,
+						timezone.now(),
+						old=uw.secret_key)
+				if not success:
+					messages.error(request, "Ethereum VoterPool update failed")
+					return render(request, 'ballots/account.html', {'f': f})
+
+			# Update db
+			ea = uw.ethaccount
+			if not uw.ethaccount:
+				ea = bm.EthAccount(user=uw.user)
+			ea.secret_key = secret_key
+			ea.address = eu.priv_to_addr(secret_key)
+			ea.save()
+		messages.success(request, "Your Ethereum secret key is saved.")
+		return redirect(reverse('ballots:account'))
 
 
 def logout(request):
@@ -77,20 +73,18 @@ def logout(request):
 
 
 def about(request):
-	context = get_default_context(request)
-	return render(request, 'ballots/about.html', context)
+	return render(request, 'ballots/about.html')
 
 
 def ask(request):
 
 	# TODO: detect whether user may deposit
 	# This involves making a lookup call to the factory
-	context = get_default_context(request)
 
 	# Present empty form
 	if request.method == 'GET':
-		context['f'] = AskForm()
-		return render(request, 'ballots/ask.html', context)
+		f = AskForm()
+		return render(request, 'ballots/ask.html', {'f':f})
 
 	# Assume POST
 	else:
@@ -102,13 +96,16 @@ def ask(request):
 
 
 def explore(request):
-	context = get_default_context(request)
-	context['ballot_list'] = ballot_list = bm.Ballot.objects.all()
-	return render(request, 'ballots/explore.html', context)
+	ballot_list = bm.Ballot.objects.all()
+	return render(request, 'ballots/explore.html', {
+		'ballot_list': ballot_list,
+	})
 
 
-def vote(request, address=""):
-	context = get_default_context(request)
+def vote(request, address=''):
+	context = {}
+	if not address:
+		address = request.GET.get('address') or ''
 
 	# Retrieve ballot
 	address = eu.remove0x(address)
@@ -129,7 +126,7 @@ def vote(request, address=""):
 
 	# Display ballot with empty form
 	if request.method == 'GET':
-		context['f'] = CommitForm()
+		context['f'] = RevealForm()
 		return render(request, 'ballots/vote.html', context)
 	
 	# Assume we have a POST
@@ -140,6 +137,14 @@ def vote(request, address=""):
 		elif context['revealing']:
 			pass
 		return redirect('ballots:hex', address=address)
+
+
+def debug(request):
+	messages.error(request, "It looks like we're doomed now. This can't be good.")
+	messages.warning(request, "Do ABC to prevent massive failure.")
+	messages.success(request, "Everything seems ok. Good job not screwing it up")
+	# return render(request, 'ballots/about.html')
+	return redirect('ballots:about')
 
 
 ###########
@@ -180,7 +185,9 @@ class AskForm(forms.Form):
 			label='Question',
 			required=True,
 			max_length=bm.MAX_QUESTION_LEN,
-			widget=forms.Textarea(attrs={'class':'form-control'}))
+			widget=forms.Textarea(attrs={
+				'class':'form-control',
+				'style':'resize: none'}))
 	max_option = forms.IntegerField(
 			label='Max Option',
 			initial=2,

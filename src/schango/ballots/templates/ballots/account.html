@@ -15,15 +15,19 @@ active
   <h4 class="not-hdr">{{ user.first_name }} {{ user.last_name }}</h4>
   <label>Address</label>
   <h4 class="not-hdr">
-    {{ user.ethaccount.address }}
+    {% if user.ethaccount.address %}
+      {{ user.ethaccount.address }}
+    {% else %}
+      N/A
+    {% endif %}
   </h4>
 
   <form role="form" action="{% url 'ballots:account' %}" method="post">
     {% csrf_token %}
     <div class="form-group">
-      {{ f.secret_key.errors }}
       {{ f.secret_key.label_tag }}
       {{ f.secret_key }}
+      {{ f.secret_key.errors }}
     </div>
     <button type="submit" class="btn btn-default">Save</button>
   </form>

@@ -85,12 +85,22 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+#####################
+## Message passing ##
+#####################
+
+from django.contrib.messages import constants as message_constants
+MESSAGE_TAGS = {
+	message_constants.ERROR: 'danger',
+}
+
 
 #############################
 ## Facebook authentication ##
 #############################
 
 TEMPLATE_CONTEXT_PROCESSORS = (
+	# Default
 	'django.contrib.auth.context_processors.auth',
 	'django.core.context_processors.debug',
 	'django.core.context_processors.i18n',
@@ -98,8 +108,13 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 	'django.core.context_processors.static',
 	'django.core.context_processors.tz',
 	'django.contrib.messages.context_processors.messages',
+
+	# Social auth
 	'social.apps.django_app.context_processors.backends',
 	'social.apps.django_app.context_processors.login_redirect',
+
+	# pdz8
+	'ballots.context_processors.user_processor',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -112,5 +127,15 @@ SOCIAL_AUTH_FACEBOOK_SECRET = 'dff1dea4cf9ecc112b7a3b8281255945'
 SOCIAL_AUTH_FACEBOOK_SCOPE = []
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {}
 
+
+#######################
+## Ethereum settings ##
+#######################
+
+# TODO change all these
+ENABLE_ETH = False
+ADMIN_ADDRESS = 'e6389d124a71c6f5f671cbc0a5a6fb22aac80ff4'
+ADMIN_SECRET = '99d0ca395a634c3d8e7b7f1893cf87fd71c66daa654271ee22fdb541be262587'
+VOTER_POOL_ADDRESS = 'b7a11e17aecf399a3821d006ded0df750adcfbcc'
 
 

@@ -162,6 +162,10 @@ def is_priv(s):
 def is_pub(s):
 	return is_hex(s) and (len(remove0x(s)) == 40)
 
+# Convert hex string to byte string
+def hex_to_bytes(h):
+	return removeL(remove0x(h)).decode('hex')
+
 
 #########################
 ## Currency conversion ##

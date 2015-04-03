@@ -13,34 +13,43 @@ contract VoterPool {
         owner = msg.sender;
     }
 
-    function add(address entry) {
-        if (tx.origin != owner) return;
+    function add(address entry) returns(bool success) {
+        if (tx.origin != owner) return false;
         whiteList[entry] = true;
+        return true;
     }
 
-    function remove(address entry) {
-        if (tx.origin != owner) return;
+    function remove(address entry) returns(bool success) {
+        if (tx.origin != owner) return false;
         whiteList[entry] = false;
+        return true;
     }
 
-    function update(address old, address nu) {
-        if (tx.origin != owner) return;
+    function update(address old, address nu) returns(bool success) {
+        if (tx.origin != owner) return false;
         whiteList[old] = false;
         whiteList[nu] = true;
+        return true;
     }
 
     // Let a non-owner update the pool (with the owner's permission)
     function update_for(
             address old, address nu, uint256 editTime, 
-            hash8 v, hash256 r, hash256 s) {
+            hash8 v, hash256 r, hash256 s) returns(bool success) {
         // Validate request
         hash256 h = sha3(address(this), old, nu, editTime);
-        if (owner != ecrecover(h, v, r, s)) return;
-        if (editTime <= lastEdit[old] || editTime <= lastEdit[nu]) return;
+        if (owner != ecrecover(h, v, r, s))
+            return false;
+        if (editTime <= lastEdit[old])
+            return false;
 
         // Execute update
         whiteList[old] = false;
         whiteList[nu] = true;
+        lastEdit[nu] = editTime
+
+        // success
+        return true;
     }
 
     function is_voter(address entry) constant returns(bool ret) {
@@ -68,7 +77,7 @@ contract DjBallot {
 
     // Authority which chooses voters (parent)
     address pool;
-    address owner;
+    address asker;
 
     // Choice range (0 is not at option)
     uint256 maxOption;
@@ -119,7 +128,7 @@ contract DjBallot {
         startTime = _startTime;
         revealTime = startTime + _votingPeriod;
         redeemTime = revealTime + _revealPeriod;
-        owner = msg.sender;
+        asker = tx.origin;
 
         // Get question
         question[0] = _q0;
@@ -137,46 +146,54 @@ contract DjBallot {
             string32 _q3, string32 _q4) {}
 
 
+    ////////////////////////
+    // Instance functions //
+    ////////////////////////
+
     // Register a trigger for another contract
     function wait_for_decision() {
         waiters[numWaiting] = msg.sender;
         numWaiting++;
     }
 
-    // Get hash directly from contract so there is no confusion
-    function get_hash(address a, uint256 voteVal, hash256 nonce_hash) constant returns(hash256 ret) {
-        return sha3(a, address(this), voteVal, nonce_hash);
-    }
-
     // Submit hash for myself
-    function submit_hash(hash256 h) {
+    function submit_hash(hash256 h)
+            constant returns(bool success) {
 
         // Validate input
-        if (block.timestamp < startTime || block.timestamp >= revealTime) return;
+        if (block.timestamp < startTime || block.timestamp >= revealTime)
+            return false;
         address a = tx.origin;
-        if (!VoterPool(pool).is_voter(a)) return;
+        if (!VoterPool(pool).is_voter(a))
+            return false;
 
         // Update down payment
         voterMap[a].paid += msg.value;
 
         // Record hash
         voterMap[a].h = h;
+        return true;
     }
 
     // Submit hash of vote for other account
-    function submit_hash_for(hash256 h, hash8 v, hash256 r, hash256 s) {
+    function submit_hash_for(hash256 h, hash8 v, hash256 r, hash256 s)
+            constant returns(bool success) {
 
         // Assert correct time and voter
-        if (block.timestamp < startTime || block.timestamp >= revealTime) return;
+        if (block.timestamp < startTime || block.timestamp >= revealTime)
+            return false;
         address a = ecrecover(h, v, r, s);
-        if (tx.origin != owner && a != tx.origin) return;
-        if (!VoterPool(pool).is_voter(a)) return;
+        if (tx.origin != asker && a != tx.origin)
+            return false;
+        if (!VoterPool(pool).is_voter(a))
+            return false;
         
         // Update down payment
         voterMap[a].paid += msg.value;
 
         // Record hash
         voterMap[a].h = h;
+        return true;
     }
 
 
@@ -188,38 +205,50 @@ contract DjBallot {
 
 
     // Reveal hash value and tally the vote
-    function reveal_vote_for(address a, uint256 voteVal, hash256 nonce_hash) {
+    function reveal_vote_for(address a, uint256 voteVal, hash256 nonce_hash) 
+            constant returns(bool success) {
 
-        // Validate input
-        if (block.timestamp < revealTime || block.timestamp >= redeemTime) return;
-        if (voteVal == 0 || voteVal > maxOption) return;
+        // Validate phase and voteVal
+        if (block.timestamp < revealTime || block.timestamp >= redeemTime) 
+            return false;
+        if (voteVal == 0 || voteVal > maxOption)
+            return false;
 
-        // Check hash and vote if good
+        // Check that deposit has been paid
+        if (voterMap[a].paid < downPayment) return false;
+
+        // Check hash
         hash256 h = sha3(a, address(this), voteVal, nonce_hash);
-        if (voterMap[tx.origin].h == h)
-        {
-            // Record vote
-            voterMap[tx.origin].choice = voteVal;
-            tally[voteVal]++;
+        if (voterMap[a].h != h) return false;
 
-            // Record as revealer
-            revealers[numRevealed] = a;
-            numRevealed++;
-        }
+        // Check if already revealed
+        if (voterMap[a].choice == voteVal) return true;
+
+        // Record vote
+        voterMap[a].choice = voteVal;
+        tally[voteVal]++;
+
+        // Record as revealer
+        revealers[numRevealed] = a;
+        numRevealed++;
+        return true;
     }
-    function reveal_hash(uint256 voteVal, hash256 nonce_hash) {
-        this.reveal_vote_for(tx.origin, voteVal, nonce_hash);
+    function reveal_hash(uint256 voteVal, hash256 nonce_hash)
+            constant returns(bool success) {
+        return this.reveal_vote_for(tx.origin, voteVal, nonce_hash);
     }
 
 
     // Tally up votes and redeem winners
-    function tally_up() {
+    function tally_up() returns(uint256 ret) {
 
-        // Validate input
-        if (block.timestamp < redeemTime) return;
-        if (decision != 0) return;
+        // Return pre-computed decision
+        if (decision != 0) return decision;
 
-        // Calculate decision and reward
+        // Check that it is redeem time
+        if (block.timestamp < redeemTime) return decision;
+
+        // Calculate the decision
         uint256 i = 1;
         decision = 0;
         while (i <= maxOption) {
@@ -228,10 +257,15 @@ contract DjBallot {
             }
             i++;
         }
-        if (decision == 0) return;
-        uint256 reward = address(this).balance / tally[decision];
+
+        // Give funds to asker if there was no decision
+        if (decision == 0) {
+            asker.send(address(this).balance);
+            return decision;
+        }
 
         // Reward correct revealers
+        uint256 reward = address(this).balance / tally[decision];
         i = 0;
         while (i < numRevealed) {
             if (voterMap[revealers[i]].choice == decision) {
@@ -244,10 +278,17 @@ contract DjBallot {
         while (i < numWaiting) {
             IWait(waiters[i]).trigger(decision);
         }
+
+        // Output decision
+        return decision;
     }
 
-    
-    // Getters
+
+    /////////////
+    // Getters //
+    /////////////
+
+    // Field getters
     function get_max_option() constant returns(uint256 ret) {
         return maxOption;
     }
@@ -275,9 +316,21 @@ contract DjBallot {
         ret_q3 = question[3];
         ret_q4 = question[4];
     }
+    function get_version() constant returns(uint256 ret) {
+        return 1;
+    }
+
+    // Compute has directly from contract so there is no confusion
+    function get_hash(address a, uint256 voteVal, hash256 nonce_hash)
+            constant returns(hash256 ret) {
+        return sha3(a, address(this), voteVal, nonce_hash);
+    }
 
 
-    // Debug only
+    ////////////////
+    // Debug only //
+    ////////////////
+    
     function kill_me() {
         suicide(tx.origin);
     }
