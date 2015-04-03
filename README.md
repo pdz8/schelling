@@ -51,6 +51,22 @@ source schellrc.sh
 Everything but `pyethereum` works on Windows (TODO: add shocked emoticon). This is a good compromise since `pyethereum` doesn't work well anywhere.
 
 
+## Running CrowdAssert
+
+CrowdAssert requires an Ethereum JSON-RPC node to be running in order to interact with the blockchain. Simply running `eth -j` will not work since CrowdAssert needs to be able to use different secret keys and secret keys cannot be touched via RPC.
+Thus we provide a managing server `ethnode` in the `pyschelling` package which runs `eth` as a subprocess. Become running the web-server, simply run:
+
+```
+ethnode --verbosity 0 2> /dev/null &
+```
+
+A development server can then be started via the following. Note that this configuration is open to any visitors.
+
+```
+python manage.py runserver 0.0.0.0:8000
+```
+
+
 ## Schelling contracts
 
 #### Voter pool
