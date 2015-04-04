@@ -15,19 +15,13 @@ active
   <h4 class="not-hdr">{{ b.question }}</h4>
 </div>
 
-{% if committing or revealing or redeeming %}
 <div class="panel panel-default panel-body">
+{% if redeemed %}
+  <label>Decision</label>
+  <h4 class="not-hdr">{{ b.decision }}</h4>
+{% elif committing or revealing or redeeming %}
   <form role="form" action="{% url 'ballots:hex' b.address %}" method="post">
     {% csrf_token %}
-
-    {% if committing %}
-      <div class="form-group">
-        {{ f.secret_key.errors }}
-        {{ f.secret_key.label_tag }}
-        {{ f.secret_key }}
-        {# <p>Note: We will never store your key on our server.</p> #}
-      </div>
-    {% endif %}
 
     {% if committing or revealing %}
       <div class="row">
@@ -48,11 +42,17 @@ active
     <button type="submit" class="btn btn-default">Commit To Vote</button>
     {% elif revealing %}
     <button type="submit" class="btn btn-default">Reveal Vote</button>
+    {% elif redeeming %}
+    <button type="submit" class="btn btn-default">Tally Votes</button>
+    <p class="text-warning">Note: This action could cost a significant amount of Gas depending on the number of voters.</p>
     {% endif %}
 
   </form>
-</div>
+{% else %}
+  <label>Start Time</label>
+  <h4 class="not-hdr">{{ b.start_time }}</h4>
 {% endif %}
+</div>
 
 <div id="tech_panel" class="panel panel-default panel-body" hidden>
   

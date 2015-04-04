@@ -140,9 +140,9 @@ class EthRpc():
 			accs[i] = accs[i].encode('ascii','ignore')
 		return accs
 
-	def get_coinbase(self):
-		skeleton = {"jsonrpc":"2.0","method":"eth_coinbase","params":[],"id":64}
-		return self.make_request(skeleton)['result'].encode('ascii','ignore')
+	def is_mining(self):
+		skeleton = {"jsonrpc":"2.0","method":"eth_mining","params":[],"id":64}
+		return self.make_request(skeleton)['result']
 
 
 

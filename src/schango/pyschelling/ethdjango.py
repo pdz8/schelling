@@ -20,7 +20,10 @@ BALLOT_CONTRACT = er.Contract(cb.abiDjBallot, rpc=RPC)
 #############
 
 def datetime_to_utc(dt):
-	return int((dt - datetime(1970, 1, 1)).total_seconds())
+	genesis = datetime(1970, 1, 1)
+	if dt.tzinfo:
+		dt = dt.replace(tzinfo=None) - dt.utcoffset()
+	return int((dt - genesis).total_seconds())
 
 
 ##################
@@ -61,11 +64,16 @@ def update_voter_for(secret_key, c_addr, owner_secret, edit_dt, old=None):
 	edit_utc = hex(datetime_to_utc(edit_dt))
 
 	# Create signature
-	msg = (eu.hex_to_bytes(c_addr)
-			+ eu.hex_to_bytes(old)
-			+ eu.hex_to_bytes(entry)
-			+ eu.hex_to_bytes(edit_utc))
-	(v,r,s) = eu.sign(msg, owner_secret)
+	h = POOL_CONTRACT.call(
+			'get_hash',
+			[old, entry, edit_utc],
+			c_addr=c_addr)
+	(v,r,s) = eu.sign(h, owner_secret, do_hash=False)
+	# msg = (eu.hex_to_bytes(c_addr)
+	# 		+ eu.hex_to_bytes(old)
+	# 		+ eu.hex_to_bytes(entry)
+	# 		+ eu.hex_to_bytes(edit_utc))
+	# (v,r,s) = eu.sign(msg, owner_secret)
 
 	# Send transaction
 	success = False
@@ -144,7 +152,7 @@ def create_pool(secret_key):
 				cb.abiVoterPool,
 				RPC,
 				sender=sender)
-	return c.c_addr if c else ''
+	return eu.remove0x(c.c_addr) if c else ''
 
 # Create a ballot
 def create_ballot(
@@ -159,8 +167,8 @@ def create_ballot(
 		max_option,
 		wei_deposit,
 		datetime_to_utc(start_time),
-		commit_period * 3600,
-		reveal_period * 3600,
+		commit_period * 60,
+		reveal_period * 60,
 	] + eu.str_to_string32(question, arr_len=5)
 	with en.ManagerClient(secret_key):
 		c = er.Contract.create(
@@ -170,19 +178,24 @@ def create_ballot(
 				RPC,
 				sender=sender,
 				ethval=wei_deposit)
-	return c.c_addr if c else ''
+	return eu.remove0x(c.c_addr) if c else ''
 
 
-###########
-## Calls ##
-###########
+################
+## Free calls ##
+################
 
 # Check if voter
 def is_voter(c_addr, entry):
-	h = POOL_CONTRACT.call('is_voter', [], c_addr=c_addr)
+	h = POOL_CONTRACT.call('is_voter', [entry], c_addr=c_addr)
 	return eu.bool_from_u256(h)
 
 # Get the tallied decision
 def get_decision(c_addr):
 	h = BALLOT_CONTRACT.call('get_decision', [], c_addr=c_addr)
+	return eu.int_from_u256(h)
+
+# Get the number of completed votes
+def get_num_revealed(c_addr):
+	h = BALLOT_CONTRACT.call('get_num_revealed', [], c_addr=c_addr)
 	return eu.int_from_u256(h)

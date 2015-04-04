@@ -12,7 +12,7 @@ alias ethcon="eth -j -r $POC8_IP -p $POC_PORT"
 # Add to PATH for convenience
 if [[ -f "schellrc.sh" ]]; then
     if [[ ! $PATH =~ "$(pwd)" ]]; then
-        PATH=$PATH:$(pwd)/src/pyschelling
+        PATH=$PATH:$(pwd)/src/schango/pyschelling
     fi
 else
     echo "Run in project root to add to PATH." >&2

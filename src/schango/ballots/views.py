@@ -107,7 +107,7 @@ def ask(request):
 	c_addr = eu.priv_to_addr(eu.keccak(question)) # DEBUG only
 	if settings.ENABLE_ETH:
 		c_addr = ed.create_ballot(
-				eu.secret_key,
+				uw.secret_key,
 				settings.VOTER_POOL_ADDRESS,
 				question,
 				max_option,
@@ -120,8 +120,8 @@ def ask(request):
 			return render(request, 'ballots/ask.html', {'f':f})
 
 	# Update db
-	reveal_time = start_time + datetime.timedelta(hours=commit_period)
-	redeem_time = reveal_time + datetime.timedelta(hours=reveal_period)
+	reveal_time = start_time + datetime.timedelta(minutes=commit_period)
+	redeem_time = reveal_time + datetime.timedelta(minutes=reveal_period)
 	b = bm.Ballot(
 			address=c_addr,
 			question=question,
@@ -129,7 +129,8 @@ def ask(request):
 			reveal_time=reveal_time,
 			redeem_time=redeem_time,
 			down_payment=down_payment,
-			max_option=max_option)
+			max_option=max_option,
+			debug_only=not settings.ENABLE_ETH)
 	b.save()
 
 	# Success
@@ -145,6 +146,7 @@ def explore(request):
 
 
 def vote(request, address=''):
+	uw = cp.UserWrapper(request)
 	context = {}
 	if not address:
 		address = request.GET.get('address') or ''
@@ -153,14 +155,13 @@ def vote(request, address=''):
 	address = eu.remove0x(address)
 	b = get_object_or_404(bm.Ballot, address=address)
 	context['b'] = b
-	context['submit_text'] = 'Submit'
-	context['f'] = None
 
 	# Detect with phase the ballot is in
 	dt = timezone.now()
 	context['committing'] = (dt >= b.start_time and dt < b.reveal_time)
 	context['revealing'] = (dt >= b.reveal_time and dt < b.redeem_time)
 	context['redeeming'] = (dt >= b.reveal_time)
+	context['redeemed'] = (b.decision > 0)
 
 	# TODO: get decision from model or Ethereum
 	if context['redeeming']:
@@ -172,13 +173,64 @@ def vote(request, address=''):
 		return render(request, 'ballots/vote.html', context)
 	
 	# Assume we have a POST
-	else:
-		# TODO: actually handle voting here
+	# Get fields and check for errors
+	f = RevealForm(request.POST)
+	if not uw.secret_key:
+		messages.error(request, notices.NO_SECRET)
+		return render(request, 'ballots/ask.html', {'f':f})
+	if not f.is_valid():
+		return render(request, 'ballots/ask.html', {'f':f})
+	vote_val = f.cleaned_data['vote_val']
+	nonce = f.cleaned_data['nonce']
+
+	# TODO: actually handle voting here
+	success = True
+	if settings.ENABLE_ETH and not b.debug_only:
 		if context['committing']:
-			pass
+			success = ed.submit_hash(
+					uw.secret_key,
+					b.address,
+					vote_val,
+					nonce,
+					b.down_payment)
+			if not success:
+				messages.error(request, notices.COMMIT_ERROR)
+			else:
+				messages.success(request, notices.COMMIT_SUCCESS)
 		elif context['revealing']:
-			pass
+			success = ed.reveal_vote(
+					uw.secret_key,
+					b.address,
+					vote_val,
+					nonce)
+			if not success:
+				messages.error(request, notices.REVEAL_ERROR)
+			else:
+				messages.success(request, notices.REVEAL_SUCCESS)
+		elif context['redeeming']:
+			decision = ed.get_decision(b.address)
+			if decision:
+				messages.success(request,'Votes already tallied.')
+			elif not ed.get_num_revealed(b.address):
+				messages.warning(request,'No votes were recorded.')
+			else:
+				decision = ed.tally(uw.secret_key, b.address)
+				success = bool(decision)
+				if not success:
+					messages.error(request, notices.TALLY_ERROR)
+				else:
+					messages.success(request, notices.TALLY_SUCCESS)
+		elif context['redeemed']:
+			messages.success(request,'Votes already tallied.')
+		else:
+			messages.warning(request, notices.TOO_EARLY)
+
+	# Check success
+	if not success:
+		return render(request, 'ballots/vote.html', context)
+	else:
 		return redirect('ballots:hex', address=address)
+
 
 
 def debug(request):
@@ -252,14 +304,14 @@ class AskForm(forms.Form):
 			required=True,
 			widget=forms.DateTimeInput(attrs={'class':'form-control'}))
 	commit_period = forms.IntegerField(
-			label='Commit Period (hours)',
-			initial=24,
+			label='Commit Period (minutes)',
+			initial=1440,
 			required=True,
 			min_value=1,
 			widget=forms.NumberInput(attrs={'class':'form-control'}))
 	reveal_period = forms.IntegerField(
-			label='Reveal Period (hours)',
-			initial=24,
+			label='Reveal Period (minutes)',
+			initial=1440,
 			required=True,
 			min_value=1,
 			widget=forms.NumberInput(attrs={'class':'form-control'}))

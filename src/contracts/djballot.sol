@@ -13,6 +13,11 @@ contract VoterPool {
         owner = msg.sender;
     }
 
+
+    //////////////////
+    // Transactions //
+    //////////////////
+
     function add(address entry) returns(bool success) {
         if (tx.origin != owner) return false;
         whiteList[entry] = true;
@@ -46,15 +51,38 @@ contract VoterPool {
         // Execute update
         whiteList[old] = false;
         whiteList[nu] = true;
-        lastEdit[nu] = editTime
+        lastEdit[nu] = editTime;
 
         // success
         return true;
     }
 
+
+    ////////////////////////
+    // Constant functions //
+    ////////////////////////
+
+    // Main interface function
+    // Tell if voter is good
     function is_voter(address entry) constant returns(bool ret) {
         return whiteList[entry];
     }
+
+    // Use this as a ping
+    function get_owner() constant returns(address ret) {
+        return owner;
+    }
+
+    // Compute has directly from contract so there is no confusion
+    function get_hash(address old, address nu, uint256 editTime)
+            constant returns(hash256 ret) {
+        return sha3(address(this), old, nu, editTime);
+    }
+
+
+    ////////////////
+    // Debug only //
+    ////////////////
 
     function kill_me() {
         if (tx.origin != owner) return;
@@ -306,6 +334,9 @@ contract DjBallot {
     }
     function get_decision() constant returns(uint256 ret) {
         return decision;
+    }
+    function get_num_revealed() constant returns(uint256 ret) {
+        return numRevealed;
     }
     function get_question() constant returns(
             string32 ret_q0, string32 ret_q1, string32 ret_q2,

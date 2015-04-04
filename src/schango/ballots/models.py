@@ -33,6 +33,8 @@ class Ballot(models.Model):
 			max_digits=100,
 			decimal_places=18)
 	max_option = models.IntegerField()
+	decision = models.IntegerField(default=0)
+	debug_only = models.BooleanField(default=True)
 
 	# Get string representation
 	def __str__(self):

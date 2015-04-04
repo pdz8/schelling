@@ -41,11 +41,13 @@ def priv_to_addr(priv):
 
 # Sign with secp256k1
 # msg should not be packed as hex
-def sign(msg, priv):
+def sign(msg, priv, do_hash=True):
 	if is_hex(msg):
 		msg = remove0x(msg).decode('hex')
 	priv = remove0x(priv).decode('hex')
 	h = sha3.sha3_256(msg).digest()
+	if not do_hash:
+		h = msg
 	v,r,s = btc.ecdsa_raw_sign(h, priv)
 	v = removeL(hex(v))
 	r = removeL(hex(r))

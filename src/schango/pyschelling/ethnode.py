@@ -25,10 +25,13 @@ DEFAULT_REMOTE_PORT = 30303
 DEFAULT_LOAD_TIME = 4 # wait for eth to startup
 
 # Change defaults for Windows
-if sys.platform == 'win32':
+if sys.platform in ['win32','cygwin']:
 	DEFAULT_ETH_EXE = 'eth'
-elif sys.platform == 'cygwin':
-	DEFAULT_ETH_EXE = 'eth'
+	DEFAULT_DB_PATH = os.getenv('APPDATA') + '\\Ethereum'
+	if sys.platform == 'win32':
+		pass
+	elif sys.platform == 'cygwin':
+		pass
 
 # Default alternates
 ALT_DB_PATH = DEFAULT_DB_PATH + '2'
@@ -54,7 +57,7 @@ class EthNode():
 			remote_port=DEFAULT_REMOTE_PORT,
 			secret=None,
 			interact=True,
-			mine=False,
+			mine=True,
 			no_output=True,
 			append_args=[],
 			load_time=DEFAULT_LOAD_TIME):
