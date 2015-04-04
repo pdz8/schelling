@@ -13,9 +13,8 @@ active
   <table class="table table-hover">
     <thead>
       <th>Question</th>
-      {# <th>Address</th> #}
       <th>Start Time</th>
-      <th>Deposit (ether)</th>
+      <th>Deposit</th>
     </thead>
     <tbody>
       {% for b in ballot_list %}
@@ -25,8 +24,8 @@ active
             {{ b.question }}
           </a>
         </td>
-        <td>{{ b.start_time }}</td>
-        <td>{{ b.down_payment }}</td>
+        <td>{{ b.start_time|date:"M d, Y H:i" }}</td>
+        <td>{{ b.down_payment }} ether</td>
       </tr>
       {% endfor %}
     </tbody>

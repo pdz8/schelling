@@ -3,7 +3,6 @@ import datetime
 
 from django import forms
 from django.conf import settings
-# import django.contrib.auth as auth
 from django.contrib import messages, auth
 from django.core.urlresolvers import reverse
 from django.shortcuts import render, get_object_or_404, redirect
@@ -14,6 +13,7 @@ from pyschelling import ethutils as eu
 from pyschelling import ethdjango as ed
 import ballots.models as bm
 import ballots.context_processors as cp
+import ballots.notices as notices
 
 
 ######################
@@ -38,33 +38,35 @@ def account(request):
 			f = AccountForm({'secret_key': secret_key})
 		return render(request, 'ballots/account.html', {'f': f})
 
-	# Set new secret key
-	else:
-		f = AccountForm(request.POST)
-		if f.is_valid():
-			secret_key = f.cleaned_data['secret_key']
+	# Assume the request is a POST
+	# Get new secret key
+	f = AccountForm(request.POST)
+	if not f.is_valid():
+		return render(request, 'ballots/account.html', {'f': f})
+	secret_key = f.cleaned_data['secret_key']
 
-			# Update ethereum
-			if settings.ENABLE_ETH:
-				success = ed.update_voter_for(
-						secret_key,
-						settings.VOTER_POOL_ADDRESS,
-						settings.ADMIN_SECRET,
-						timezone.now(),
-						old=uw.secret_key)
-				if not success:
-					messages.error(request, "Ethereum VoterPool update failed")
-					return render(request, 'ballots/account.html', {'f': f})
+	# Update ethereum
+	if settings.ENABLE_ETH:
+		success = ed.update_voter_for(
+				secret_key,
+				settings.VOTER_POOL_ADDRESS,
+				settings.ADMIN_SECRET,
+				timezone.now(),
+				old=uw.secret_key)
+		if not success:
+			messages.error(request, "Ethereum VoterPool update failed")
+			return render(request, 'ballots/account.html', {'f': f})
 
-			# Update db
-			ea = uw.ethaccount
-			if not uw.ethaccount:
-				ea = bm.EthAccount(user=uw.user)
-			ea.secret_key = secret_key
-			ea.address = eu.priv_to_addr(secret_key)
-			ea.save()
-		messages.success(request, "Your Ethereum secret key is saved.")
-		return redirect(reverse('ballots:account'))
+	# Update db
+	ea = uw.ethaccount
+	if not uw.ethaccount:
+		ea = bm.EthAccount(user=uw.user)
+	ea.secret_key = secret_key
+	ea.address = eu.priv_to_addr(secret_key)
+	ea.save()
+
+	messages.success(request, "Your Ethereum secret key is saved.")
+	return redirect(reverse('ballots:account'))
 
 
 def logout(request):
@@ -77,22 +79,62 @@ def about(request):
 
 
 def ask(request):
-
-	# TODO: detect whether user may deposit
-	# This involves making a lookup call to the factory
+	uw = cp.UserWrapper(request)
 
 	# Present empty form
 	if request.method == 'GET':
+		if not uw.secret_key:
+			messages.warning(request, notices.NO_SECRET)
 		f = AskForm()
 		return render(request, 'ballots/ask.html', {'f':f})
 
 	# Assume POST
-	else:
-		# TODO:
-		# 1. Validate user create deposit
-		# 2. Create contract - resetting deposit
-		# 3. Redirect to vote page
-		return redirect('ballots:explore')
+	# Get fields and check for errors
+	f = AskForm(request.POST)
+	if not uw.secret_key:
+		messages.error(request, notices.NO_SECRET)
+		return render(request, 'ballots/ask.html', {'f':f})
+	if not f.is_valid():
+		return render(request, 'ballots/ask.html', {'f':f})
+	question = f.cleaned_data['question']
+	max_option = f.cleaned_data['max_option']
+	down_payment = f.cleaned_data['down_payment']
+	start_time = f.cleaned_data['start_time']
+	commit_period = f.cleaned_data['commit_period']
+	reveal_period = f.cleaned_data['reveal_period']
+
+	# Update ethereum
+	c_addr = eu.priv_to_addr(eu.keccak(question)) # DEBUG only
+	if settings.ENABLE_ETH:
+		c_addr = ed.create_ballot(
+				eu.secret_key,
+				settings.VOTER_POOL_ADDRESS,
+				question,
+				max_option,
+				down_payment,
+				start_time,
+				commit_period,
+				reveal_period)
+		if not c_addr:
+			messages.error(request, "Failed to create ballot on Ethereum")
+			return render(request, 'ballots/ask.html', {'f':f})
+
+	# Update db
+	reveal_time = start_time + datetime.timedelta(hours=commit_period)
+	redeem_time = reveal_time + datetime.timedelta(hours=reveal_period)
+	b = bm.Ballot(
+			address=c_addr,
+			question=question,
+			start_time=start_time,
+			reveal_time=reveal_time,
+			redeem_time=redeem_time,
+			down_payment=down_payment,
+			max_option=max_option)
+	b.save()
+
+	# Success
+	messages.success(request, 'Your ballot has been created.')
+	return redirect(reverse('ballots:hex', args=[c_addr]))
 
 
 def explore(request):
@@ -143,8 +185,8 @@ def debug(request):
 	messages.error(request, "It looks like we're doomed now. This can't be good.")
 	messages.warning(request, "Do ABC to prevent massive failure.")
 	messages.success(request, "Everything seems ok. Good job not screwing it up")
-	# return render(request, 'ballots/about.html')
-	return redirect('ballots:about')
+	return render(request, 'ballots/about.html')
+	# return redirect('ballots:about')
 
 
 ###########

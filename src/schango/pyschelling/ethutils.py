@@ -16,6 +16,8 @@ from docopt import docopt
 
 # sha3
 def keccak(x, treat_as_hex=True):
+	if isinstance(x, unicode):
+		x = x.encode('utf-8', 'ignore')
 	if is_hex(x) and treat_as_hex:
 		x = remove0x(x).decode('hex')
 	return sha3.sha3_256(x).hexdigest()
@@ -51,7 +53,8 @@ def sign(msg, priv):
 	return (v,r,s)
 
 # Recover signing address from msg and sig
-def recover(msg, (v,r,s)):
+def recover(msg, tup):
+	(v,r,s) = tup
 	v = int(v, 16)
 	r = int(r, 16)
 	s = int(s, 16)

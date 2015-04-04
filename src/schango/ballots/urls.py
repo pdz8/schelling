@@ -16,6 +16,8 @@ urlpatterns = patterns('',
 	# Alternatives
 	url(r'^create/', ballots.views.ask, name='create'),
 	url(r'^vote/', ballots.views.vote, name='vote'),
+	url(r'^address/(0x)?(?P<address>[0-9a-fA-F]{40})/', 
+			ballots.views.vote, name='address'),
 
 	# Testing/debugging/sandbox
 	url(r'^debug/', ballots.views.debug, name='debug'),

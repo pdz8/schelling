@@ -32,7 +32,7 @@ class Ballot(models.Model):
 			'Ether deposit',
 			max_digits=100,
 			decimal_places=18)
-	max_choice = models.IntegerField()
+	max_option = models.IntegerField()
 
 	# Get string representation
 	def __str__(self):
@@ -46,5 +46,7 @@ class EthAccount(models.Model):
 			max_length=66)
 	user = models.OneToOneField(User)
 
-
+	# Get string representation
+	def __str__(self):
+		return self.address	
 

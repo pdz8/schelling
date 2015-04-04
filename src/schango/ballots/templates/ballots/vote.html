@@ -1,9 +1,4 @@
 {% extends "base.html" %}
-{% load staticfiles %}
-
-{% block headstuff %}
-<script src="{% static 'ballots/vote.js' %}"></script>
-{% endblock %}
 
 {% block content_title %}
 Vote
@@ -67,7 +62,7 @@ active
   <div class="row">
     <div class="col-sm-4">
       <label>Max Option</label>
-      <h4 class="not-hdr">{{ b.max_choice }}</h4>
+      <h4 class="not-hdr">{{ b.max_option }}</h4>
     </div>
     <div class="col-sm-8">
       <label>Deposit (ether)</label>
@@ -91,6 +86,9 @@ active
   </div>
 
 </div>
-<a id="show_more">Show more</a>
+<a class="show-more" for="tech_panel">
+  <span>Show more</span>
+  <span hidden>Show less</span>
+</a>
 
 {% endblock %}

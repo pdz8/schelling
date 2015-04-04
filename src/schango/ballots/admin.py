@@ -1,5 +1,19 @@
 from django.contrib import admin
-from ballots.models import Ballot
+import ballots.models as bm
 
-# Register your models here.
-admin.site.register(Ballot)
+
+###################
+## Admin classes ##
+###################
+
+class BallotAdmin(admin.ModelAdmin):
+	list_display = ['question']
+
+
+
+###############################
+## Register your models here ##
+###############################
+
+admin.site.register(bm.Ballot, BallotAdmin)
+admin.site.register(bm.EthAccount)
