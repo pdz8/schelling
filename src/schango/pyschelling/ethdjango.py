@@ -38,18 +38,17 @@ def add_voter(secret_key, c_addr, entry, old=None):
 		return True
 	with en.ManagerClient(secret_key):
 		if not old:
-			ret = POOL_CONTRACT.transact(
+			success = POOL_CONTRACT.call_then_transact(
 					'add',
 					[entry],
 					sender=sender,
 					c_addr=c_addr)
 		else:
-			ret = POOL_CONTRACT.transact(
+			success = POOL_CONTRACT.call_then_transact(
 					'update',
 					[entry, old],
 					sender=sender,
 					c_addr=c_addr)
-		success = eu.bool_from_u256(ret)
 	return success
 
 
@@ -61,7 +60,7 @@ def update_voter_for(secret_key, c_addr, owner_secret, edit_dt, old=None):
 	entry = sender
 	if not old:
 		old = '0'*40
-	edit_utc = hex(datetime_to_utc(edit_dt))
+	edit_utc = datetime_to_utc(edit_dt)
 
 	# Create signature
 	h = POOL_CONTRACT.call(
@@ -69,21 +68,15 @@ def update_voter_for(secret_key, c_addr, owner_secret, edit_dt, old=None):
 			[old, entry, edit_utc],
 			c_addr=c_addr)
 	(v,r,s) = eu.sign(h, owner_secret, do_hash=False)
-	# msg = (eu.hex_to_bytes(c_addr)
-	# 		+ eu.hex_to_bytes(old)
-	# 		+ eu.hex_to_bytes(entry)
-	# 		+ eu.hex_to_bytes(edit_utc))
-	# (v,r,s) = eu.sign(msg, owner_secret)
 
 	# Send transaction
 	success = False
 	with en.ManagerClient(secret_key):
-		ret = POOL_CONTRACT.transact(
+		success = POOL_CONTRACT.call_then_transact(
 				'update_for',
 				[old, entry, edit_utc, v, r, s],
 				sender=sender,
 				c_addr=c_addr)
-		success = eu.bool_from_u256(ret)
 	return success
 
 
@@ -98,13 +91,12 @@ def submit_hash(secret_key, c_addr, vote_val, nonce, deposit):
 			c_addr=c_addr)
 	success = False
 	with en.ManagerClient(secret_key):
-		ret = BALLOT_CONTRACT.transact(
+		success = BALLOT_CONTRACT.call_then_transact(
 				'submit_hash',
 				[h],
 				sender=sender,
 				c_addr=c_addr,
 				ethval=wei_deposit)
-		success = eu.bool_from_u256(ret)
 	return success
 
 
@@ -114,12 +106,11 @@ def reveal_vote(secret_key, c_addr, vote_val, nonce):
 	nonce_hash = eu.keccak(nonce, False)
 	success = False
 	with en.ManagerClient(secret_key):
-		ret = BALLOT_CONTRACT.transact(
+		success = BALLOT_CONTRACT.call_then_transact(
 				'reveal_hash',
 				[vote_val, nonce_hash],
 				sender=sender,
 				c_addr=c_addr)
-		success = eu.bool_from_u256(ret)
 	return success
 
 
@@ -128,12 +119,12 @@ def tally(secret_key, c_addr):
 	sender = eu.priv_to_addr(secret_key)
 	decision = 0
 	with en.ManagerClient(secret_key):
-		ret = BALLOT_CONTRACT.transact(
+		decision = BALLOT_CONTRACT.call_then_transact(
 				'tally_up',
 				[],
 				sender=sender,
-				c_addr=c_addr)
-		decision = eu.int_from_u256(ret)
+				c_addr=c_addr,
+				f_retval=(lambda x: eu.int_from_u256(x)))
 	return decision
 
 

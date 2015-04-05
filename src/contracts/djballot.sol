@@ -45,7 +45,7 @@ contract VoterPool {
         hash256 h = sha3(address(this), old, nu, editTime);
         if (owner != ecrecover(h, v, r, s))
             return false;
-        if (editTime <= lastEdit[old])
+        if (editTime <= lastEdit[nu])
             return false;
 
         // Execute update

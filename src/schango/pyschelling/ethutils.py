@@ -41,13 +41,12 @@ def priv_to_addr(priv):
 
 # Sign with secp256k1
 # msg should not be packed as hex
-def sign(msg, priv, do_hash=True):
-	if is_hex(msg):
-		msg = remove0x(msg).decode('hex')
+def sign(h, priv, do_hash=False):
+	if is_hex(h):
+		h = remove0x(h).decode('hex')
+	if do_hash:
+		h = sha3.sha3_256(h).digest()
 	priv = remove0x(priv).decode('hex')
-	h = sha3.sha3_256(msg).digest()
-	if not do_hash:
-		h = msg
 	v,r,s = btc.ecdsa_raw_sign(h, priv)
 	v = removeL(hex(v))
 	r = removeL(hex(r))
@@ -55,16 +54,17 @@ def sign(msg, priv, do_hash=True):
 	return (v,r,s)
 
 # Recover signing address from msg and sig
-def recover(msg, tup):
+def recover(h, tup, do_hash=False):
 	(v,r,s) = tup
 	v = int(v, 16)
 	r = int(r, 16)
 	s = int(s, 16)
-	if is_hex(msg):
-		msg = remove0x(msg).decode('hex')
-	h = sha3.sha3_256(msg).digest()
+	if is_hex(h):
+		h = remove0x(h).decode('hex')
+	if do_hash:
+		h = sha3.sha3_256(h).digest()
 	pub = btc.encode_pubkey(btc.ecdsa_raw_recover(h, (v,r,s)), 'hex')
-	return pub_to_addr(pub)
+	return pub_to_addr(pub[2:])
 
 
 #################################

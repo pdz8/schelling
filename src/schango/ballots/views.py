@@ -52,7 +52,7 @@ def account(request):
 				settings.VOTER_POOL_ADDRESS,
 				settings.ADMIN_SECRET,
 				timezone.now(),
-				old=uw.secret_key)
+				old=uw.address)
 		if not success:
 			messages.error(request, "Ethereum VoterPool update failed")
 			return render(request, 'ballots/account.html', {'f': f})

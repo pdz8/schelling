@@ -5,6 +5,7 @@ import requests
 import sha3
 from docopt import docopt
 from ethutils import prepend0x, remove0x, padzeros, try_int, removeL
+import ethutils as eu
 
 
 # Defaults
@@ -64,17 +65,13 @@ class EthRpc():
 		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
 	# Do a simple call (getters)
-	def call(self, addr, sig, args, data=None):
-		addr = prepend0x(addr)
-		if data:
-			data = prepend0x(data)
-		else:
-			data = encode_abi(sig, args)
-		skeleton = {"jsonrpc":"2.0","method":"eth_call","params":[{"to":addr,"data":data}],"id":1}
-		return self.make_request(skeleton)['result'].encode('ascii','ignore')
+	def call(self, addr, sig, args, data=None, ethval=0, sender=None):
+		return self.transact(addr, ethval, sig, args,
+				data=data, sender=sender, is_call=True)
 
 	# Make transaction
-	def transact(self, recip, ethval, sig, args, data=None, sender=None):
+	def transact(self, recip, ethval, sig, args,
+			data=None, sender=None, is_call=False):
 
 		# Format input
 		recip = prepend0x(recip)
@@ -97,6 +94,8 @@ class EthRpc():
 		if sender:
 			sender = prepend0x(sender)
 			skeleton["params"][0]["from"] = sender
+		if is_call:
+			skeleton["method"] = "eth_call"
 		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
 
@@ -228,19 +227,33 @@ class Contract():
 		return c
 
 	# Make call
-	def call(self, fname, args, c_addr=None):
-		if not c_addr:
-			c_addr = self.c_addr
-		data = Contract.abi_to_hex(self.input_types, fname, args)
-		return self.rpc.call(c_addr, None, None, data=data)
+	def call(self, fname, args,
+			ethval=0, sender=None, c_addr=None):
+		return self.transact(
+				fname, args, ethval=ethval, sender=sender,
+				c_addr=c_addr, is_call=True)
 
 	# Make transaction
-	def transact(self, fname, args, ethval=0, sender=None, c_addr=None):
+	def transact(self, fname, args, ethval=0, sender=None,
+			c_addr=None, is_call=False):
 		if not c_addr:
 			c_addr = self.c_addr
 		data = Contract.abi_to_hex(self.input_types, fname, args)
 		return self.rpc.transact(
-			c_addr, ethval, None, None, data=data, sender=sender)
+				c_addr, ethval, None, None,
+				data=data, sender=sender, is_call=is_call)
+
+	# Call, check success, then transact
+	def call_then_transact(self, fname, args,
+			ethval=0, sender=None, c_addr=None,
+			f_success=(lambda x: eu.bool_from_u256(x)),
+			f_retval=(lambda x: eu.bool_from_u256(x))):
+		ret = self.call(fname, args, 
+				ethval=ethval, sender=sender, c_addr=c_addr)
+		if f_success(ret):
+			self.transact(fname, args,
+					ethval=ethval, sender=sender, c_addr=c_addr)
+		return f_retval(ret)
 
 
 
