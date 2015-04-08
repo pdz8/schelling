@@ -1,7 +1,6 @@
 from decimal import *
 import datetime
 
-from django import forms
 from django.conf import settings
 from django.contrib import messages, auth
 from django.core.urlresolvers import reverse
@@ -14,6 +13,8 @@ from pyschelling import ethdjango as ed
 import ballots.models as bm
 import ballots.context_processors as cp
 import ballots.notices as notices
+import ballots.forms as bf
+import ballots.utils as bu
 
 
 ######################
@@ -33,14 +34,14 @@ def account(request):
 	# Provide empty form or old values
 	if request.method == 'GET':
 		secret_key = uw.secret_key
-		f = AccountForm()
+		f = bf.AccountForm()
 		if secret_key:
-			f = AccountForm({'secret_key': secret_key})
+			f = bf.AccountForm({'secret_key': secret_key})
 		return render(request, 'ballots/account.html', {'f': f})
 
 	# Assume the request is a POST
 	# Get new secret key
-	f = AccountForm(request.POST)
+	f = bf.AccountForm(request.POST)
 	if not f.is_valid():
 		return render(request, 'ballots/account.html', {'f': f})
 	secret_key = f.cleaned_data['secret_key']
@@ -85,12 +86,12 @@ def ask(request):
 	if request.method == 'GET':
 		if not uw.secret_key:
 			messages.warning(request, notices.NO_SECRET)
-		f = AskForm()
+		f = bf.AskForm()
 		return render(request, 'ballots/ask.html', {'f':f})
 
 	# Assume POST
 	# Get fields and check for errors
-	f = AskForm(request.POST)
+	f = bf.AskForm(request.POST)
 	if not uw.secret_key:
 		messages.error(request, notices.NO_SECRET)
 		return render(request, 'ballots/ask.html', {'f':f})
@@ -155,6 +156,8 @@ def vote(request, address=''):
 	address = eu.remove0x(address)
 	b = get_object_or_404(bm.Ballot, address=address)
 	context['b'] = b
+	(question, options) = bu.parse_question(b.question, b.max_option)
+	context['question'] = question
 
 	# Detect with phase the ballot is in
 	dt = timezone.now()
@@ -169,17 +172,18 @@ def vote(request, address=''):
 
 	# Display ballot with empty form
 	if request.method == 'GET':
-		context['f'] = RevealForm()
+		context['f'] = bf.RevealForm(options, )
 		return render(request, 'ballots/vote.html', context)
 	
 	# Assume we have a POST
 	# Get fields and check for errors
-	f = RevealForm(request.POST)
+	context['f'] = f = bf.RevealForm(options, request.POST)
 	if not uw.secret_key:
 		messages.error(request, notices.NO_SECRET)
-		return render(request, 'ballots/ask.html', {'f':f})
+		return render(request, 'ballots/vote.html', context)
 	if not f.is_valid():
-		return render(request, 'ballots/ask.html', {'f':f})
+		messages.error(request, notices.FORM_ERROR)
+		return render(request, 'ballots/vote.html', context)
 	vote_val = f.cleaned_data['vote_val']
 	nonce = f.cleaned_data['nonce']
 
@@ -224,6 +228,8 @@ def vote(request, address=''):
 			messages.success(request,'Votes already tallied.')
 		else:
 			messages.warning(request, notices.TOO_EARLY)
+	else:
+		messages.success(request, notices.NO_ETH_SUCCESS)
 
 	# Check success
 	if not success:
@@ -232,87 +238,10 @@ def vote(request, address=''):
 		return redirect('ballots:hex', address=address)
 
 
-
 def debug(request):
 	messages.error(request, "It looks like we're doomed now. This can't be good.")
 	messages.warning(request, "Do ABC to prevent massive failure.")
 	messages.success(request, "Everything seems ok. Good job not screwing it up")
 	return render(request, 'ballots/about.html')
 	# return redirect('ballots:about')
-
-
-###########
-## Forms ##
-###########
-
-class AccountForm(forms.Form):
-	secret_key = forms.CharField(
-			label='Secret Key (hex)',
-			max_length=66,
-			min_length=64,
-			widget=forms.TextInput(attrs={'class':'form-control'}))
-			# widget=forms.PasswordInput(attrs={'class':'form-control'}))
-
-class RevealForm(forms.Form):
-	vote_val = forms.IntegerField(
-			label='Vote Value',
-			required=True,
-			min_value=1,
-			widget=forms.NumberInput(attrs={'class':'form-control'}))
-	nonce = forms.CharField(
-			label='Secret Nonce',
-			required=True,
-			max_length=32,
-			widget=forms.TextInput(attrs={'class':'form-control'}))
-			# widget=forms.PasswordInput(attrs={'class':'form-control'}))
-
-class CommitForm(RevealForm):
-	secret_key = forms.CharField(
-			label='Secret Key (hex)',
-			max_length=66,
-			min_length=64,
-			widget=forms.TextInput(attrs={'class':'form-control'}))
-			# widget=forms.PasswordInput(attrs={'class':'form-control'}))
-
-class AskForm(forms.Form):
-	question = forms.CharField(
-			label='Question',
-			required=True,
-			max_length=bm.MAX_QUESTION_LEN,
-			widget=forms.Textarea(attrs={
-				'class':'form-control',
-				'style':'resize: none'}))
-	max_option = forms.IntegerField(
-			label='Max Option',
-			initial=2,
-			required=True,
-			min_value=2,
-			widget=forms.NumberInput(attrs={'class':'form-control'}))
-	down_payment = forms.DecimalField(
-			label='Deposit (ether)',
-			initial=Decimal(1.5),
-			min_value=Decimal(0),
-			required=True,
-			decimal_places=18,
-			max_digits=100,
-			widget=forms.NumberInput(attrs={
-					'class':'form-control',
-					'step':'0.5'}))
-	start_time = forms.DateTimeField(
-			label='Start Time',
-			initial=timezone.now(),
-			required=True,
-			widget=forms.DateTimeInput(attrs={'class':'form-control'}))
-	commit_period = forms.IntegerField(
-			label='Commit Period (minutes)',
-			initial=1440,
-			required=True,
-			min_value=1,
-			widget=forms.NumberInput(attrs={'class':'form-control'}))
-	reveal_period = forms.IntegerField(
-			label='Reveal Period (minutes)',
-			initial=1440,
-			required=True,
-			min_value=1,
-			widget=forms.NumberInput(attrs={'class':'form-control'}))
 

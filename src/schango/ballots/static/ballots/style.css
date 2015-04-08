@@ -2,9 +2,30 @@
     max-width: 800px;
 }
 
+/* Use h4 as a display for variables */
 .not-hdr{
     margin-top: 0em;
     margin-bottom: 1em;
+}
+
+/* Change the default django radio button style */
+.dj-radio ul{
+    padding: 0;
+    list-style: none;
+}
+.dj-radio label{
+    font-weight: normal;
+}
+.dj-radio input[type=radio]{
+    margin-right: 0.5em;
+}
+
+/* Remove the bootstrap underline from links in tables */
+table a:not(btn):not(.btn).table-link{
+    text-decoration: none;
+}
+table a:not(btn):not(.btn).table-link:hover{
+    text-decoration: underline;
 }
 
 /* Pull dt to the left */

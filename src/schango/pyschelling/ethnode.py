@@ -58,7 +58,7 @@ class EthNode():
 			secret=None,
 			interact=True,
 			mine=True,
-			no_output=True,
+			verbosity=0, 
 			append_args=[],
 			load_time=DEFAULT_LOAD_TIME):
 		# Save inputs
@@ -87,12 +87,12 @@ class EthNode():
 			self.args += ['-m', 'on']
 		if append_args:
 			self.args += append_args
-		self.args += ['-v', '0']
+		if verbosity < 4:
+			self.args += ['-v', '0']
 
 		# Start process
-		self.DEVNULL = None
-		if no_output:
-			self.DEVNULL = open(os.devnull, 'wb')
+		self.DEVNULL = open(os.devnull, 'wb')
+		if verbosity < 3:
 			self.process = subprocess.Popen(
 				self.args,
 				stdin=subprocess.PIPE,
@@ -114,21 +114,22 @@ class EthNode():
 
 	# Initialize default node
 	@classmethod
-	def init_default(cls, load_time=DEFAULT_LOAD_TIME, append_args=[]):
-		en = cls(load_time=load_time, append_args=append_args)
+	def init_default(cls, load_time=DEFAULT_LOAD_TIME, append_args=[], verbosity=0):
+		en = cls(load_time=load_time, append_args=append_args, verbosity=verbosity)
 		return en
 
 
 	# Initialize node 2
 	@classmethod
-	def init_alternate(cls, load_time=DEFAULT_LOAD_TIME, append_args=[]):
+	def init_alternate(cls, load_time=DEFAULT_LOAD_TIME, append_args=[], verbosity=0):
 		en = cls(
 			db_path=ALT_DB_PATH,
 			json_port=ALT_JSON_PORT,
 			listen_port=ALT_LISTEN_PORT,
 			remote_ip=ALT_REMOTE_IP,
 			load_time=load_time,
-			append_args=append_args)
+			append_args=append_args,
+			verbosity=verbosity)
 		return en
 
 
@@ -357,7 +358,7 @@ if __name__ == "__main__":
 
 	# Start server
 	vp.out('Starting Ethereum node...\n')
-	node = EthNode.init_default()
+	node = EthNode.init_default(verbosity=verbosity)
 	if node.is_alive():
 		vp.out('Ethereum node running\n')
 	else:

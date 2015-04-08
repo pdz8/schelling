@@ -12,7 +12,13 @@ active
 
 <div class="panel panel-default panel-body">
   <label>Question</label>
-  <h4 class="not-hdr">{{ b.question }}</h4>
+  <h4 class="not-hdr">
+    {% if question %}
+      {{ question }}
+    {% else %}
+      {{ b.question }}
+    {% endif %}
+  </h4>
 </div>
 
 <div class="panel panel-default panel-body">
@@ -26,14 +32,16 @@ active
     {% if committing or revealing %}
       <div class="row">
         <div class="form-group col-sm-6">
-          {{ f.vote_val.errors }}
           {{ f.vote_val.label_tag }}
-          {{ f.vote_val }}
+          <div class="dj-radio">
+            {{ f.vote_val }}
+          </div>
+          {{ f.vote_val.errors }}
         </div>
         <div class="form-group col-sm-6">
-          {{ f.nonce.errors }}
           {{ f.nonce.label_tag }}
           {{ f.nonce }}
+          {{ f.nonce.errors }}
         </div>
       </div>
     {% endif %}
