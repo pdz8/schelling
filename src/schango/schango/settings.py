@@ -122,20 +122,35 @@ AUTHENTICATION_BACKENDS = (
 	'django.contrib.auth.backends.ModelBackend',
 )
 
-SOCIAL_AUTH_FACEBOOK_KEY = '1565849607002326'
-SOCIAL_AUTH_FACEBOOK_SECRET = 'dff1dea4cf9ecc112b7a3b8281255945'
 SOCIAL_AUTH_FACEBOOK_SCOPE = []
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {}
+
+# These are DEFAULT VALUES
+# Override in local_settings.py
+SOCIAL_AUTH_FACEBOOK_KEY = '1571810896406197' # SCOIN-Test1
+SOCIAL_AUTH_FACEBOOK_SECRET = '1c53e7351e654dc6313b9f22589240e2' # SCOIN-Test1
+# SOCIAL_AUTH_FACEBOOK_KEY = '1565849607002326' # production
+# SOCIAL_AUTH_FACEBOOK_SECRET = 'dff1dea4cf9ecc112b7a3b8281255945' # production
 
 
 #######################
 ## Ethereum settings ##
 #######################
 
-# TODO change all these
+# These are DEFAULT VALUES
+# Override in local_settings.py
 ENABLE_ETH = False
 ADMIN_ADDRESS = '1d6f390b1d4acfc2b8de0de51ecec83fa066f790'
 ADMIN_SECRET = '74b12683b0c444efe79aa1e480c624f7dc4772f4c14ac2bd783b0ed8c4a197f6'
 VOTER_POOL_ADDRESS = '320bbe4c03e3277cbeb256e875885c7c69b054b9'
 
 
+####################
+## Local settings ##
+####################
+# This needs to be at the bottom of the settings file!
+
+try:
+	from local_settings import *
+except:
+	pass
