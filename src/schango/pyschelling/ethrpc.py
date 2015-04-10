@@ -31,6 +31,11 @@ class EthRpc():
 		r = requests.post(self.server, data=json.dumps(skeleton))
 		return json.loads(r.text)
 
+	# Get the client version
+	def get_version(self):
+		skeleton = {"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":67}
+		return self.make_request(skeleton)['result'].encode('ascii','ignore')
+
 	# Get the balance at given address
 	def get_balance(self, addr):
 		addr = prepend0x(addr)

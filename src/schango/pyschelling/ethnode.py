@@ -7,8 +7,8 @@ from threading import Lock, Condition, Thread
 import socket
 from docopt import docopt
 
-import ethrpc
-import ethutils
+import ethrpc as er
+import ethutils as eu
 
 
 #############
@@ -23,6 +23,7 @@ DEFAULT_LISTEN_PORT = 30303
 DEFAULT_REMOTE_IP = '5.1.83.225'
 DEFAULT_REMOTE_PORT = 30303
 DEFAULT_LOAD_TIME = 4 # wait for eth to startup
+DEFAULT_COINBASE = '1d6f390b1d4acfc2b8de0de51ecec83fa066f790'
 
 # Change defaults for Windows
 if sys.platform in ['win32','cygwin']:
@@ -57,7 +58,8 @@ class EthNode():
 			remote_port=DEFAULT_REMOTE_PORT,
 			secret=None,
 			interact=True,
-			mine=True,
+			mine=False,
+			coinbase=DEFAULT_COINBASE,
 			verbosity=0, 
 			append_args=[],
 			load_time=DEFAULT_LOAD_TIME):
@@ -85,6 +87,8 @@ class EthNode():
 			self.args += ['-i']
 		if mine:
 			self.args += ['-m', 'on']
+		if coinbase:
+			self.args += ['-a', coinbase]
 		if append_args:
 			self.args += append_args
 		if verbosity < 4:
@@ -108,21 +112,30 @@ class EthNode():
 		time.sleep(load_time)
 
 		# Additional fields
-		self.rpc = ethrpc.EthRpc('localhost', json_port)
+		self.rpc = er.EthRpc('localhost', json_port)
 		self.mutex = Lock()
 
 
 	# Initialize default node
 	@classmethod
-	def init_default(cls, load_time=DEFAULT_LOAD_TIME, append_args=[], verbosity=0):
-		en = cls(load_time=load_time, append_args=append_args, verbosity=verbosity)
-		return en
+	def init_default(cls, 
+			load_time=DEFAULT_LOAD_TIME,
+			append_args=[],
+			coinbase=DEFAULT_COINBASE,
+			verbosity=0):
+		node = cls(load_time=load_time, append_args=append_args, verbosity=verbosity)
+		node.input_cmd('minestart')
+		return node
 
 
 	# Initialize node 2
 	@classmethod
-	def init_alternate(cls, load_time=DEFAULT_LOAD_TIME, append_args=[], verbosity=0):
-		en = cls(
+	def init_alternate(cls, 
+			load_time=DEFAULT_LOAD_TIME,
+			append_args=[],
+			coinbase=DEFAULT_COINBASE,
+			verbosity=0):
+		node = cls(
 			db_path=ALT_DB_PATH,
 			json_port=ALT_JSON_PORT,
 			listen_port=ALT_LISTEN_PORT,
@@ -130,7 +143,8 @@ class EthNode():
 			load_time=load_time,
 			append_args=append_args,
 			verbosity=verbosity)
-		return en
+		node.input_cmd('minestart')
+		return node
 
 
 	# Send command to the eth console
@@ -164,8 +178,8 @@ class EthNode():
 	# Set secret key
 	def set_secret(self, priv, reset_json=True):
 		# Format command
-		priv = ethutils.prepend0x(priv)
-		if not ethutils.is_hex(priv):
+		priv = eu.prepend0x(priv)
+		if not eu.is_hex(priv):
 			return False
 		cmd = 'setSecret ' + priv
 
@@ -255,7 +269,8 @@ class ConnectionHandler(Thread):
 				secret_key = ''
 				while len(secret_key) < 64:
 					secret_key += clientsocket.recv(64 - len(secret_key))
-				self.manager.vp.out('LOCK on ' + secret_key + '\n', 2)
+				addr = eu.priv_to_addr(secret_key)
+				self.manager.vp.out('LOCK on ' + addr + '\n', 2)
 
 				# Set the secret key
 				self.manager.node.set_secret(secret_key)
