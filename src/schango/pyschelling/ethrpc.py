@@ -22,9 +22,12 @@ CONSTRUCTOR_SIG = 'constructor_sig'
 #################
 
 class EthRpc():
-	def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, poc=8):
+	def __init__(self,
+			host=DEFAULT_HOST,
+			port=DEFAULT_PORT,
+			version=0.8):
 		self.server = "http://{0}:{1}".format(host, str(port))
-		self.poc = poc
+		self.version = version
 
 	# Do a json request
 	def make_request(self, skeleton):
@@ -36,11 +39,18 @@ class EthRpc():
 		skeleton = {"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":67}
 		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
+	# Get the current block number (useful for confirmations)
+	def get_block_number(self):
+		skeleton = {"jsonrpc":"2.0","method":"eth_number","params":[],"id":83}
+		if self.version > 0.8:
+			skeleton["method"] = "eth_blockNumber"
+		return self.make_request(skeleton)['result']
+
 	# Get the balance at given address
 	def get_balance(self, addr):
 		addr = prepend0x(addr)
 		skeleton = {"jsonrpc":"2.0","method":"eth_balanceAt","params":[addr],"id":1}
-		if self.poc == 9:
+		if self.version > 0.8:
 			skeleton = {"jsonrpc":"2.0","method":"eth_getBalance","params":[addr,"latest"],"id":1}
 		h = self.make_request(skeleton)['result'].encode('ascii','ignore')
 		return int(h, 16)
@@ -49,7 +59,7 @@ class EthRpc():
 	def get_storage(self, addr):
 		addr = prepend0x(addr)
 		skeleton = {"jsonrpc":"2.0","method":"eth_storageAt","params":[addr],"id":1}
-		if self.poc == 9:
+		if self.version > 0.8:
 			skeleton = {"jsonrpc":"2.0","method":"eth_getStorage","params":[addr,"latest"],"id":1}
 		store = self.make_request(skeleton)['result']
 		retval = {}
@@ -65,7 +75,7 @@ class EthRpc():
 		if not isinstance(index, str):
 			index = hex(index)
 		skeleton = {"jsonrpc":"2.0","method":"eth_stateAt","params":[addr,index],"id":1}
-		if self.poc == 9:
+		if self.version > 0.8:
 			skeleton = {"jsonrpc":"2.0","method":"eth_getStorageAt","params":[addr,index,"latest"],"id":1}
 		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
@@ -94,8 +104,9 @@ class EthRpc():
 
 		# Make call
 		skeleton = {"jsonrpc":"2.0","method":"eth_transact","params":[{"value":ethval,"to":recip,"data":data}],"id":1}
-		if self.poc == 9:
-			skeleton = {"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"value":ethval,"to":recip,"data":data}],"id":1}
+		if self.version > 0.8:
+			skeleton["method"] = "eth_sendTransaction"
+			# skeleton = {"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"value":ethval,"to":recip,"data":data}],"id":1}
 		if sender:
 			sender = prepend0x(sender)
 			skeleton["params"][0]["from"] = sender
@@ -119,8 +130,8 @@ class EthRpc():
 
 		# Format and send request
 		skeleton = {"jsonrpc":"2.0","method":"eth_transact","params":[{"value":ethval,"code":code}],"id":1}
-		if self.poc == 9:
-			skeleton = {"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"value":ethval,"code":code}],"id":1}
+		if self.version > 0.8:
+			skeleton["method"] = "eth_sendTransaction"
 		if sender:
 			sender = prepend0x(sender)
 			skeleton["params"][0]["from"] = sender
@@ -272,20 +283,23 @@ usage_string = \
 Ethereum RPC
 
 Usage:
-  ethrpc encode_abi <sig> [<params>...]
-  ethrpc get_balance <addr>
-  ethrpc get_storage <addr>
-  ethrpc get_index <addr> <index>
-  ethrpc call <recip> <sig> [<params>...]
-  ethrpc transact <recip> <ethval> [<sig> [<params>...]]
-  ethrpc create_contract <ethval> <code> [<params>...]
-  ethrpc get_accounts
-  ethrpc get_coinbase
+  ethrpc encode_abi <sig> [<params>...] [options]
+  ethrpc get_version [options]
+  ethrpc get_block_number [options]
+  ethrpc get_balance <addr> [options]
+  ethrpc get_storage <addr> [options]
+  ethrpc get_index <addr> <index> [options]
+  ethrpc call <recip> <sig> [<params>...] [options]
+  ethrpc transact <recip> <ethval> [<sig> [<params>...]] [options]
+  ethrpc create_contract <ethval> <code> [<params>...] [options]
+  ethrpc get_accounts [options]
+  ethrpc get_coinbase [options]
+  ethrpc is_mining [options]
 
 Options:
   -h --help
   -H --host=<host>
-  -p --port=<port>
+  -P --port=<port>
   -s --sender=<sender>
   -d --data=<data>
 """
@@ -339,6 +353,15 @@ if __name__ == "__main__":
 		sys.stdout.write(str(r))
 	elif args['get_coinbase']:
 		r = rpc.get_coinbase()
+		sys.stdout.write(str(r))
+	elif args['get_block_number']:
+		r = rpc.get_block_number()
+		sys.stdout.write(str(r))
+	elif args['get_version']:
+		r = rpc.get_version()
+		sys.stdout.write(str(r))
+	elif args['is_mining']:
+		r = rpc.is_mining()
 		sys.stdout.write(str(r))
 
 

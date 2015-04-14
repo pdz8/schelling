@@ -163,8 +163,8 @@ def try_int(i):
 def is_priv(s):
 	return is_hex(s) and (len(remove0x(s)) == 64)
 
-# Is this a public key
-def is_pub(s):
+# Is this an address
+def is_addr(s):
 	return is_hex(s) and (len(remove0x(s)) == 40)
 
 # Convert hex string to byte string
