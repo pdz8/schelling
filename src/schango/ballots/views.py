@@ -16,6 +16,11 @@ import ballots.notices as notices
 import ballots.forms as bf
 import ballots.utils as bu
 
+###############
+## Constants ##
+###############
+
+SCOIN_API = ed.SchellingCoin(host=settings.ETHD_HOST)
 
 ######################
 ## Request handlers ##
@@ -48,7 +53,7 @@ def account(request):
 
 	# Update ethereum
 	if settings.ENABLE_ETH:
-		success = ed.update_voter_for(
+		success = SCOIN_API.update_voter_for(
 				secret_key,
 				settings.VOTER_POOL_ADDRESS,
 				settings.ADMIN_SECRET,
@@ -107,7 +112,7 @@ def ask(request):
 	# Update ethereum
 	c_addr = eu.priv_to_addr(eu.keccak(question)) # DEBUG only
 	if settings.ENABLE_ETH:
-		c_addr = ed.create_ballot(
+		c_addr = SCOIN_API.create_ballot(
 				uw.secret_key,
 				settings.VOTER_POOL_ADDRESS,
 				question,
@@ -191,7 +196,7 @@ def vote(request, address=''):
 	success = True
 	if settings.ENABLE_ETH and not b.debug_only:
 		if context['committing']:
-			success = ed.submit_hash(
+			success = SCOIN_API.submit_hash(
 					uw.secret_key,
 					b.address,
 					vote_val,
@@ -202,7 +207,7 @@ def vote(request, address=''):
 			else:
 				messages.success(request, notices.COMMIT_SUCCESS)
 		elif context['revealing']:
-			success = ed.reveal_vote(
+			success = SCOIN_API.reveal_vote(
 					uw.secret_key,
 					b.address,
 					vote_val,
@@ -212,13 +217,13 @@ def vote(request, address=''):
 			else:
 				messages.success(request, notices.REVEAL_SUCCESS)
 		elif context['redeeming']:
-			decision = ed.get_decision(b.address)
+			decision = SCOIN_API.get_decision(b.address)
 			if decision:
 				messages.success(request,'Votes already tallied.')
-			elif not ed.get_num_revealed(b.address):
+			elif not SCOIN_API.get_num_revealed(b.address):
 				messages.warning(request,'No votes were recorded.')
 			else:
-				decision = ed.tally(uw.secret_key, b.address)
+				decision = SCOIN_API.tally(uw.secret_key, b.address)
 				success = bool(decision)
 				if not success:
 					messages.error(request, notices.TALLY_ERROR)

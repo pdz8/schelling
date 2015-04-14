@@ -284,6 +284,10 @@ class ConnectionHandler(Thread):
 					data += clientsocket.recv(len(UNLOCK_MSG) - len(data))
 				clientsocket.close()
 				self.manager.vp.out('UNLOCK\n', 2)
+
+				# Reset the key to avoid exploits
+				if (self.manager.reset_key):
+					self.manager.node.set_secret(self.manager.reset_key)
 			except:
 				self.manager.vp.err('Error in ethnode conn-handler\n', 0)
 				break
@@ -291,17 +295,23 @@ class ConnectionHandler(Thread):
 
 # Server manager
 class ManagerServer:
-	def __init__(self, node, vp=VerbosePrinter(1)):
+	def __init__(self, node, vp=VerbosePrinter(1), reset_key=False,
+				host=MANAGER_HOST, port=MANAGER_PORT,
+				allowed_ip=MANAGER_HOST):
 		self.node = node
 		self.work_queue = []
 		self.mutex = Lock()
 		self.work_ready = Condition(self.mutex)
 		self.vp = vp
+		self.reset_key = eu.keccak('reset_key') if reset_key else None
+		self.host = host
+		self.port = port
+		self.allowed_ip = socket.gethostbyname(allowed_ip)
 
 	def run_loop(self):
 		# Startup socket
 		serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		serversocket.bind((MANAGER_HOST, MANAGER_PORT))
+		serversocket.bind((self.host, self.port))
 		serversocket.listen(5)
 
 		# Start worker
@@ -312,6 +322,11 @@ class ManagerServer:
 		while True:
 			try:
 				(clientsocket, address) = serversocket.accept()
+				if address[0] != self.allowed_ip:
+					self.vp.err('Disallowed IP {0} attempted to connect\n'
+							.format(address[0]))
+					clientsocket.close()
+					continue
 			except:
 				break
 			with self.mutex:
@@ -352,14 +367,19 @@ class ManagerClient:
 
 usage_string = \
 """
-Ethereum node manager
+Ethereum node manager for CrowdVerity
 
 Usage:
-  ethnode [--verbosity=<level>]
+  ethnode [options]
 
 Options:
-  -h --help
-  -v --verbosity=<level>
+  -h --help               Show this message
+  -v --verbosity=<level>  Set the verbosity [default: 1]
+  -c --coinbase=<addr>    Set the coinbase for mining
+  -R --reset_key          Reset the secret key after unlock
+  -H --host=<host>        Host to bind on [default: 0.0.0.0]
+  -P --port=<port>        Port to bind on [default: 8089]
+  -A --allowed_ip=<host>  Host to accept [default: 127.0.0.1]
 """
 
 if __name__ == "__main__":
@@ -371,14 +391,27 @@ if __name__ == "__main__":
 		verbosity = int(args['--verbosity'])
 	vp = VerbosePrinter(verbosity)
 
+	# Setup coinbase
+	coinbase = DEFAULT_COINBASE
+	if args['--coinbase'] and eu.is_addr(args['--coinbase']):
+		coinbase = args['--coinbase']
+
 	# Start server
 	vp.out('Starting Ethereum node...\n')
-	node = EthNode.init_default(verbosity=verbosity)
+	node = EthNode.init_default(
+			verbosity=verbosity,
+			coinbase=coinbase)
 	if node.is_alive():
 		vp.out('Ethereum node running\n')
 	else:
 		vp.err('Failure: Could not start node\n', 0)
 		sys.exit(1)
-	manager = ManagerServer(node, vp)
+	manager = ManagerServer(
+			node,
+			vp=vp,
+			reset_key=args['--reset_key'],
+			host=args['--host'],
+			port=int(args['--port']),
+			allowed_ip=args['--allowed_ip'])
 	vp.out('Manager server loop started\n')
 	manager.run_loop()
