@@ -25,7 +25,7 @@ DEBUG = True
 TEMPLATE_DEBUG = True
 
 # TODO: Change this to final domain!
-ALLOWED_HOSTS = ['.scoin.com']
+ALLOWED_HOSTS = ['.scoin.com','.crowdverity.com']
 
 
 # Application definition
