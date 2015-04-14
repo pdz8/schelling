@@ -1,3 +1,4 @@
-crowdverity.wsgi
-schango/local_settings.py
+/crowdverity.wsgi
+/schango/local_settings.py
+/static/
 
