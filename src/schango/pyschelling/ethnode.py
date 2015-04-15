@@ -306,7 +306,10 @@ class ManagerServer:
 		self.reset_key = eu.keccak('reset_key') if reset_key else None
 		self.host = host
 		self.port = port
-		self.allowed_ip = socket.gethostbyname(allowed_ip)
+		if allowed_ip != 'any':
+			self.allowed_ip = socket.gethostbyname(allowed_ip)
+		else:
+			self.allowed_ip = None
 
 	def run_loop(self):
 		# Startup socket
@@ -322,7 +325,9 @@ class ManagerServer:
 		while True:
 			try:
 				(clientsocket, address) = serversocket.accept()
-				if address[0] != self.allowed_ip and address[0] != '127.0.0.1':
+				if self.allowed_ip and \
+						address[0] != self.allowed_ip and \
+						address[0] != '127.0.0.1':
 				# if address[0] != self.allowed_ip:
 					self.vp.err('Disallowed IP {0} attempted to connect\n'
 							.format(address[0]))

@@ -1,34 +1,49 @@
-<h1>CrowdAssert on Ethereum</h1>
+<h1>CrowdVerity on Ethereum</h1>
 
 <p><img src="http://ic.tweakimg.net/ext/i/imagenormal/1393690309.png" alt="Coinye" title="" />
 <img src="http://www.wired.com/images_blogs/underwire/2014/01/nyan100.gif" alt="Nyan" title="" /></p>
 
 <h2>Setup</h2>
 
-<h4>Installing Ethereum</h4>
+<h4>Ethereum</h4>
 
-<p>Instructions for installing cpp-ethereum can be found <a href="https://github.com/ethereum/cpp-ethereum/wiki/Installing%20Clients">here</a>. 
-You can then check that everything is installed properly by simply running:</p>
+<p>Instructions for installing cpp-ethereum can be found <a href="https://github.com/ethereum/cpp-ethereum/wiki/Installing%20Clients">here</a>.
+For Ubuntu the steps are:</p>
+
+<p><code>
+sudo add-apt-repository ppa:ethereum/ethereum-qt
+sudo add-apt-repository ppa:ethereum/ethereum
+sudo apt-get update
+sudo apt-get install cpp-ethereum
+</code></p>
+
+<p>You can then check that everything is installed properly by simply running:</p>
 
 <p><code>
 eth -h
 </code></p>
 
-<h4>Creating an account</h4>
+<h4>pyschelling</h4>
 
-<p>By far the friendliest way to setup Ethereum accounts is to use one of the GUI clients.
-AlethZero is included with cpp-ethereum and can serve this purpose.</p>
-
-<p>In <code>ethutils.py</code> we also provide methods for secret/public key generation.</p>
-
-<h4>Python</h4>
-
-<p>We provide scripts in place of <code>pyethereum</code>.  These do not have the all of the same functionality as <code>pyethereum</code>, but they are functional.
-Install them via:</p>
+<p>We provide the <code>pyschelling</code> package to replace the seemingly abandoned <code>pyethereum</code>.
+It contains scripts for using the Ethereum JSON RPC, creating accounts, running the Ethereum node, and directly interacting with SchellingCoin contracts.
+The package and its dependencies can be installed via:</p>
 
 <p><code>
 python setup.py install
 </code></p>
+
+<p>Alternatively, just install all the <code>pip</code> dependencies and interact with the package directly in <code>&lt;repo root&gt;/src/schango/pyschelling/</code> directory:</p>
+
+<p><code>
+pip install docopt
+pip install bitcoin
+pip install requests
+pip install pysha3
+pip install pybitcointools
+</code></p>
+
+<h4>Django site</h4>
 
 <p>The website for SchellingCoin is served through the Django framework. Version 1.7 is required:</p>
 
@@ -42,25 +57,15 @@ pip install Django
 pip install python-social-auth
 </code></p>
 
-<h4>Shell</h4>
+<h2>Running CrowdVerity</h2>
 
-<p>Common patterns arise when developing and testing the SchellingCoin implementation. We try to collect these patterns into a single helpful script <code>schellrc.sh</code>:</p>
+<h4>Debug</h4>
 
-<p><code>
-source schellrc.sh
-</code></p>
-
-<h4>Windows</h4>
-
-<p>Everything but <code>pyethereum</code> works on Windows (TODO: add shocked emoticon). This is a good compromise since <code>pyethereum</code> doesn't work well anywhere.</p>
-
-<h2>Running CrowdAssert</h2>
-
-<p>CrowdAssert requires an Ethereum JSON-RPC node to be running in order to interact with the blockchain. Simply running <code>eth -j</code> will not work since CrowdAssert needs to be able to use different secret keys and secret keys cannot be touched via RPC.
+<p>CrowdVerity requires an Ethereum JSON-RPC node to be running in order to interact with the blockchain. Simply running <code>eth -j</code> will not work since CrowdVerity needs to be able to use different secret keys and secret keys cannot be touched via RPC.
 Thus we provide a managing server <code>ethnode</code> in the <code>pyschelling</code> package which runs <code>eth</code> as a subprocess. Become running the web-server, simply run:</p>
 
 <p><code>
-ethnode --verbosity 0 2&gt; /dev/null &amp;
+ethnode --verbosity 0
 </code></p>
 
 <p>A development server can then be started via the following. Note that this configuration is open to any visitors.</p>
@@ -68,6 +73,54 @@ ethnode --verbosity 0 2&gt; /dev/null &amp;
 <p><code>
 python manage.py runserver 0.0.0.0:8000
 </code></p>
+
+<h4>Release</h4>
+
+<p>The CrowdVerity production website is served by <code>www.systems.cs.cornell.edu</code> from <code>/var/www/crowdverity/</code>.
+Production settings are kept in the file <code>&lt;django root&gt;/schango/local_settings.py</code>. These should be set to keep the test and release instances separate.
+To properly load static files remember to run the following after every update:</p>
+
+<p><code>
+python manage.py collectstatic
+</code></p>
+
+<p>CrowdVerity's production node is run on <code>exta.systems.cs.cornell.edu</code>. Upstart is configured to run it:</p>
+
+<p><code>
+initctl run ethnode
+</code></p>
+
+<p>The file <code>/etc/init/ethnode.conf</code> contains the upstart configuration. Make sure that the node is set to only accept connections from the webserver:</p>
+
+<p><code>
+ethnode.py -A 128.253.3.221
+</code></p>
+
+<h2>Developing</h2>
+
+<h4>Shell</h4>
+
+<p>Common patterns arise when developing and testing the SchellingCoin implementation.
+We try to collect these patterns into a single helpful script <code>schellrc.sh</code>.
+Its source contains a number of useful variables, aliases, and functions for development.</p>
+
+<h4>Creating an account</h4>
+
+<p>A very common task during test loop is to create Ethereum accounts. This task is handled within <code>ethutils.py</code> (among many other things) so that the full blown Ethereum clients don't have to be run:</p>
+
+<p><code>python
+from ethutils import *
+secret_key = keccak('blahhhhhh')
+eth_address = priv_to_addr(secret_key)
+</code></p>
+
+<h4>Interacting with Ethereum</h4>
+
+<p>The <code>ethrpc.py</code> package provides many tools for interacting with Ethereum contracts and account. A subset of these are available directly from the command-line (<code>./ethrpc.py -h</code>).</p>
+
+<h4>Solidity</h4>
+
+<p>We have yet another Python wrapper <code>solctopy</code> within <code>&lt;repo root&gt;/src/contracts/</code>. This uses <code>solc</code> to compile Solidity and output the compiled code in a format easy for Python to read.</p>
 
 <h2>Schelling contracts</h2>
 
@@ -77,7 +130,7 @@ python manage.py runserver 0.0.0.0:8000
 We have a interface established for voter pools so that a ballot need only to call <code>is_voter(address)</code> on a pool to tell whether an address represents a registered voter.
 The implementation of <code>is_voter</code> can vary to include POW, hierarchies, fixed oracles, or no structure at all.</p>
 
-<p>The voter pool we use for CrowdAssert is a simple whitelist. We control who gets let into the pool based on who registers their Facebook account with us.
+<p>The voter pool we use for CrowdVerity is a simple whitelist. We control who gets let into the pool based on who registers their Facebook account with us.
 This is how we prevent Sybil attacks.</p>
 
 <h4>Ballot</h4>
