@@ -145,9 +145,22 @@ def ask(request):
 
 
 def explore(request):
+	# Pre-fill sort form
+	f = None
+	if 'filter_by' in request.GET or \
+			'q' in request.GET or \
+			'sort_by' in request.GET:
+		f = bf.SortForm(request.GET)
+	else:
+		f = bf.SortForm()
+
+	# Do query
 	ballot_list = bm.Ballot.objects.all()
+
+	# Render
 	return render(request, 'ballots/explore.html', {
 		'ballot_list': ballot_list,
+		'f': f,
 	})
 
 

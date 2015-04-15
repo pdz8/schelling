@@ -3,6 +3,9 @@
 
 {% block content_title %}
 Explore Ballots
+<a data-toggle="modal" data-target="#sort_modal" style="float: right;">
+  <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+</a>
 {% endblock %}
 
 {% block explore_tab_class %}
@@ -10,6 +13,42 @@ active
 {% endblock %}
 
 {% block content %}
+
+{# Sort and filter #}
+<div id="sort_modal" class="modal" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form class="modal-form" action="{% url 'ballots:explore' %}" method="get">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Sort and Filter</h4>
+        </div>
+        <div class="modal-body row">
+          <div class="form-group col-sm-4">
+            {{ f.q.label_tag }}
+            {{ f.q }}
+            {{ f.q.errors }}
+          </div>
+          <div class="form-group col-sm-4">
+            {{ f.filter_by.label_tag }}
+            {{ f.filter_by }}
+            {{ f.filter_by.errors }}
+          </div>
+          <div class="form-group col-sm-4">
+            {{ f.sort_by.label_tag }}
+            {{ f.sort_by }}
+            {{ f.sort_by.errors }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-default">Apply</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# Ballot list #}
 {% if ballot_list %}
   <table class="table table-hover">
     <thead>
@@ -34,7 +73,8 @@ active
   </table class="table">
 {% else %}
   <div class="alert alert-warning">
-    <strong>No results matched your query.</strong>
+    No results matched your query.
   </div>
 {% endif %}
+
 {% endblock %}

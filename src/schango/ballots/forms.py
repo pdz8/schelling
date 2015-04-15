@@ -45,6 +45,35 @@ class RevealForm(forms.Form):
 						# attrs={'class':'form-control'}
 					))
 
+class SortForm(forms.Form):
+	q = forms.CharField(
+			label='Question Contains',
+			required=False,
+			max_length=bm.MAX_QUESTION_LEN,
+			widget=forms.TextInput(attrs={'class':'form-control'}))
+	sort_by = forms.ChoiceField(
+			label='Sort By',
+			required=False,
+			choices=[
+				('start_time', 'Start Time'),
+				('reveal_time', 'Reveal Time'),
+				('redeem_time', 'Reedeem Time'),
+			],
+			initial='start_time',
+			widget=forms.Select(attrs={'class':'form-control'}))
+	filter_by = forms.MultipleChoiceField(
+			label='Filter',
+			required=False,
+			choices=[
+				('all','All'),
+				('committing','Committing'),
+				('revealing','Revealing'),
+				('redeemed','Complete')
+			],
+			initial=['all'],
+			widget=forms.SelectMultiple(
+				attrs={'class':'form-control'}
+			))
 
 class CommitForm(RevealForm):
 	secret_key = forms.CharField(
