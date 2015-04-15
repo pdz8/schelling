@@ -322,7 +322,8 @@ class ManagerServer:
 		while True:
 			try:
 				(clientsocket, address) = serversocket.accept()
-				if address[0] != self.allowed_ip:
+				if address[0] != self.allowed_ip and address[0] != 127.0.0.1:
+				# if address[0] != self.allowed_ip:
 					self.vp.err('Disallowed IP {0} attempted to connect\n'
 							.format(address[0]))
 					clientsocket.close()
