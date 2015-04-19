@@ -16,7 +16,7 @@ def test_success(request, success, good, bad):
 ## Warnings ##
 ##############
 
-TOO_EARLY = "Hold you horses. Voting hasn't begun yet."
+TOO_EARLY = "Action is not enabled at this time."
 
 
 ############

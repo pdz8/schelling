@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import re
+import decimal
 
 import sha3
 import bitcoin as btc
@@ -191,6 +192,7 @@ DENOM_POW = {
 
 # Convert ethereum denomination to Wei
 # Avoids floating point errors
+# This works with decimal type!
 def denom_to_wei(val, denom='ether', hex_output=False):
 	sval = str(val)
 	if sval.find('.') < 0:
@@ -206,4 +208,28 @@ def denom_to_wei(val, denom='ether', hex_output=False):
 		return removeL(hex(i))
 	else:
 		return i
+
+# Convtert wei to etherum denomination
+# This returns a string to avoid floating point mess
+# This works with decimal type!
+def wei_to_denom(val,
+		denom='ether',
+		max_dec_places=27,
+		out_decimal=False):
+	# Convert
+	sval = removeL(str(val))
+	denom = denom.lower()
+	dec = DENOM_POW[denom] if denom in DENOM_POW else DENOM_POW['ether']
+	if len(sval) < dec + 1:
+		sval = ('0' * (dec + 1 - len(sval))) + sval
+	sval = sval[:-dec] + '.' + sval[-dec:]
+
+	# Output
+	if dec > max_dec_places:
+		sval = sval[:-(dec - max_dec_places)]
+	if out_decimal:
+		return decimal.Decimal(sval)
+	else:
+		return sval
+
 

@@ -208,7 +208,7 @@ def vote(request, address=''):
 	# TODO: actually handle voting here
 	success = True
 	if settings.ENABLE_ETH and not b.debug_only:
-		if context['committing']:
+		if context['committing'] and 'commit' in request.POST:
 			success = SCOIN_API.submit_hash(
 					uw.secret_key,
 					b.address,
@@ -219,7 +219,7 @@ def vote(request, address=''):
 				messages.error(request, notices.COMMIT_ERROR)
 			else:
 				messages.success(request, notices.COMMIT_SUCCESS)
-		elif context['revealing']:
+		elif context['revealing'] and 'reveal' in request.POST:
 			success = SCOIN_API.reveal_vote(
 					uw.secret_key,
 					b.address,
@@ -229,7 +229,7 @@ def vote(request, address=''):
 				messages.error(request, notices.REVEAL_ERROR)
 			else:
 				messages.success(request, notices.REVEAL_SUCCESS)
-		elif context['redeeming']:
+		elif context['redeeming'] and 'tally' in request.POST:
 			decision = SCOIN_API.get_decision(b.address)
 			if decision:
 				messages.success(request,'Votes already tallied.')
