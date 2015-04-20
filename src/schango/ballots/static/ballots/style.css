@@ -42,3 +42,9 @@ table a:not(btn):not(.btn).table-link:hover{
     width: 85%;
     margin-bottom: 1em;
 }
+
+/* Disable floating past a point */
+span.clear{
+    clear: both;
+    display: block;
+}

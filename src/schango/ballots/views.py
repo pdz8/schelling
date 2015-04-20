@@ -103,11 +103,17 @@ def ask(request):
 	if not f.is_valid():
 		return render(request, 'ballots/ask.html', {'f':f})
 	question = f.cleaned_data['question']
-	max_option = f.cleaned_data['max_option']
 	down_payment = f.cleaned_data['down_payment']
 	start_time = f.cleaned_data['start_time']
 	commit_period = f.cleaned_data['commit_period']
 	reveal_period = f.cleaned_data['reveal_period']
+
+	# Extract max_option from quest
+	(_, options) = bu.parse_question(question)
+	if not options:
+		messages.error(request, notices.ASK_PARSE_ERROR)
+		return render(request, 'ballots/ask.html', {'f':f})
+	max_option = len(options)
 
 	# Update ethereum
 	c_addr = eu.priv_to_addr(eu.keccak(question)) # DEBUG only
@@ -174,7 +180,8 @@ def vote(request, address=''):
 	address = eu.remove0x(address)
 	b = get_object_or_404(bm.Ballot, address=address)
 	context['b'] = b
-	(question, options) = bu.parse_question(b.question, b.max_option)
+	(question, options) = bu.parse_question(
+			b.question, max_option=b.max_option)
 	context['question'] = question
 
 	# Detect with phase the ballot is in

@@ -12,19 +12,24 @@ active
 <form role="form" action="{% url 'ballots:ask' %}" method="post">
   {% csrf_token %}
 
-  <div class="form-group">
+  <div class="form-group limited-chars">
     {{ f.question.label_tag }}
+    <p style="float: right; margin-bottom: 0px;">
+      <span class="char-used">0</span>
+      /
+      <span class="char-max">0</span>
+    </p>
     {{ f.question }}
     {{ f.question.errors }}
   </div>
 
   <div class="row">
-    <div class="form-group col-sm-4">
-      {{ f.max_option.label_tag }}
-      {{ f.max_option }}
-      {{ f.max_option.errors }}
+    <div class="form-group col-sm-6">
+      {{ f.start_time.label_tag }}
+      {{ f.start_time }}
+      {{ f.start_time.errors }}
     </div>
-    <div class="form-group col-sm-8">
+    <div class="form-group col-sm-6">
       {{ f.down_payment.label_tag }}
       {{ f.down_payment }}
       {{ f.down_payment.errors }}
@@ -32,24 +37,19 @@ active
   </div>
 
   <div class="row">
-    <div class="form-group col-sm-4">
-      {{ f.start_time.label_tag }}
-      {{ f.start_time }}
-      {{ f.start_time.errors }}
-    </div>
-    <div class="form-group col-sm-4">
+    <div class="form-group col-sm-6">
       {{ f.commit_period.label_tag }}
       {{ f.commit_period }}
       {{ f.commit_period.errors }}
     </div>
-    <div class="form-group col-sm-4">
+    <div class="form-group col-sm-6">
       {{ f.reveal_period.label_tag }}
       {{ f.reveal_period }}
       {{ f.reveal_period.errors }}
     </div>
   </div>
 
-  <button type="submit" class="btn btn-default">Create Contract</button>
+  <button name="create" type="submit" class="btn btn-default">Create Contract</button>
 
 </form>
 {% endblock %}

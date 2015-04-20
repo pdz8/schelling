@@ -4,6 +4,8 @@ from django import forms
 from django.utils import timezone
 
 import ballots.models as bm
+import ballots.notices as notices
+
 
 
 ###########
@@ -87,17 +89,12 @@ class CommitForm(RevealForm):
 class AskForm(forms.Form):
 	question = forms.CharField(
 			label='Question',
+			initial=notices.ASK_TEMPLATE,
 			required=True,
 			max_length=bm.MAX_QUESTION_LEN,
 			widget=forms.Textarea(attrs={
 				'class':'form-control',
 				'style':'resize: none'}))
-	max_option = forms.IntegerField(
-			label='Max Option',
-			initial=2,
-			required=True,
-			min_value=2,
-			widget=forms.NumberInput(attrs={'class':'form-control'}))
 	down_payment = forms.DecimalField(
 			label='Deposit (ether)',
 			initial=Decimal(1.5),
