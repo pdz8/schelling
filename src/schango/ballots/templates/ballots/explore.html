@@ -19,6 +19,7 @@ active
   <div class="modal-dialog">
     <div class="modal-content">
       <form class="modal-form" action="{% url 'ballots:explore' %}" method="get">
+        {% csrf_token %}
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal">&times;</button>
           <h4 class="modal-title">Sort and Filter</h4>

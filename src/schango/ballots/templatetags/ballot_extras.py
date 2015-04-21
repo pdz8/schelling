@@ -18,6 +18,7 @@ def just_question(value):
 	(question, choices) = bu.parse_question(value, 1)
 	return question if question else value
 
+# balance|wei_to_denom:"ether,1"
 @register.filter
 def wei_to_denom(value, args):
 	args = [arg.strip() for arg in args.split(',')]

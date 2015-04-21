@@ -198,3 +198,10 @@ class SchellingCoin():
 	def get_num_revealed(self, c_addr):
 		h = self.ballot.call('get_num_revealed', [], c_addr=c_addr)
 		return eu.int_from_u256(h)
+
+	# Get account balance
+	def get_balance(self, addr):
+		try:
+			return self.rpc.get_balance(addr)
+		except:
+			return 0

@@ -1,4 +1,5 @@
 {% load staticfiles %}
+{% load ballot_extras %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,16 +38,34 @@
       {# User account buttons #}
       <ul class="nav navbar-nav navbar-right">
         {% if uw.user %}
-          <li class="{% block acc_tab_class %}{% endblock %}">
-            <a href="{% url 'ballots:account' %}">
-              My Account
-            </a>
-          </li>
+
+          {# Current balance #}
           <li>
-            <a href="{% url 'ballots:logout' %}">
-              Logout
-            </a>
+            <p class="navbar-text">
+              <img src="{% static 'ballots/ethwhite.png' %}" height="15" width="15" style="margin-right: 3px; margin-top: -5px;">
+              <span> {{ uw.balance|wei_to_denom:"ether,2" }}</span>
+            </p>
           </li>
+
+          {# Account dropdown #}
+          <li class="dropdown {% block acc_tab_class %}{% endblock %}">
+            <a class="dropdown-toggle" data-toggle="dropdown">
+              My Account <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+              <li>
+                <a href="{% url 'ballots:account' %}">
+                  Profile
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'ballots:logout' %}">
+                  Logout
+                </a>
+              </li>
+            </ul>
+          </li>
+
         {% else %}
           <li>
             <a href="{% url 'social:begin' 'facebook' %}?next={% url 'ballots:account' %}">
