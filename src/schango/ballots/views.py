@@ -159,11 +159,32 @@ def explore(request):
 			'q' in request.GET or \
 			'sort_by' in request.GET:
 		f = bf.SortForm(request.GET)
+		if not f.is_valid():
+			messages.warning(request, 'Invalid sort and filter parameters')
+			return redirect(reverse('ballots:explore'))
 	else:
 		f = bf.SortForm()
 
 	# Do query
 	ballot_list = bm.Ballot.objects.all()
+
+	# Sort and filter
+	if hasattr(f, 'cleaned_data'):
+		ballot_list = ballot_list.filter(
+				question__contains=f.cleaned_data['q'])
+		if not 'all' in f.cleaned_data['filter_by']:
+			dtnow = timezone.now()
+			if not 'unstarted' in f.cleaned_data['filter_by']:
+				ballot_list = ballot_list.exclude(start_time__gt=dtnow)
+			if not 'committing' in f.cleaned_data['filter_by']:
+				ballot_list = ballot_list.exclude(
+						start_time__lte=dtnow, reveal_time__gt=dtnow)
+			if not 'revealing' in f.cleaned_data['filter_by']:
+				ballot_list = ballot_list.exclude(
+						reveal_time__lte=dtnow, redeem_time__gt=dtnow)
+			if not 'redeeming' in f.cleaned_data['filter_by']:
+				ballot_list = ballot_list.exclude(redeem_time__lte=dtnow)
+		ballot_list = ballot_list.order_by(f.cleaned_data['sort_by'])
 
 	# Pagination
 	paginator = Paginator(ballot_list, 25)

@@ -68,9 +68,10 @@ class SortForm(forms.Form):
 			required=False,
 			choices=[
 				('all','All'),
+				('unstarted', 'Unstarted'),
 				('committing','Committing'),
 				('revealing','Revealing'),
-				('redeemed','Complete')
+				('redeemed','Complete'),
 			],
 			initial=['all'],
 			widget=forms.SelectMultiple(
