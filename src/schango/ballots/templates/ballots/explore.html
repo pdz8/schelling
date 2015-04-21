@@ -50,6 +50,8 @@ active
 
 {# Ballot list #}
 {% if ballot_list %}
+
+  {# Actual list #}
   <table class="table table-hover">
     <thead>
       <th>Question</th>
@@ -69,8 +71,35 @@ active
       </tr>
       {% endfor %}
     </tbody>
-
   </table class="table">
+
+  {# Page numbers #}
+  <ul class="pagination pagination-sm" style="float: right;">
+    {% if ballot_list.has_previous %}
+      <li>
+        <a href="{{ qstring_base }}page={{ ballot_list.previous_page_number }}">&laquo;</a>
+      </li>
+    {% else %}
+      <li class="disabled">
+        <a>&laquo;</a>
+      </li>
+    {% endif %}
+    {% for p in page_nums %}
+      <li class="{% if p == ballot_list.number %}active{% endif %}">
+        <a href="{{ qstring_base }}page={{ p }}">{{ p }}</a>
+      </li>
+    {% endfor %}
+    {% if ballot_list.has_next %}
+      <li>
+        <a href="{{ qstring_base }}page={{ ballot_list.next_page_number }}">&raquo;</a>
+      </li>
+    {% else %}
+      <li class="disabled">
+        <a>&raquo;</a>
+      </li>
+    {% endif %}
+  </ul>
+
 {% else %}
   <div class="alert alert-warning">
     No results matched your query.

@@ -26,3 +26,9 @@ def parse_question(s, max_option=None):
 	except:
 		return (None, None)
 
+
+# Get a list of a page and those surrounding it
+def surrounding_pages(curr_page, max_page, size=25):
+	low = max(1, curr_page - size / 2)
+	high = min(max_page, low + size - 1)
+	return [i for i in range(low, high + 1)]

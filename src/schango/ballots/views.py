@@ -1,9 +1,11 @@
 from decimal import *
 import datetime
+import re
 
 from django.conf import settings
 from django.contrib import messages, auth
 from django.core.urlresolvers import reverse
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template import RequestContext
 from django.utils import timezone
@@ -163,10 +165,27 @@ def explore(request):
 	# Do query
 	ballot_list = bm.Ballot.objects.all()
 
+	# Pagination
+	paginator = Paginator(ballot_list, 2)
+	page_num = request.GET.get('page')
+	try:
+		ballot_list = paginator.page(page_num)
+	except PageNotAnInteger:
+		page_num = 1
+		ballot_list = paginator.page(page_num)
+	except EmptyPage:
+		page_num = paginator.num_pages
+		ballot_list = paginator(page_num)
+	page_nums = bu.surrounding_pages(int(page_num), paginator.num_pages)
+	qstring_base = \
+			'?' + re.sub(r'&?page=\d+','',request.META['QUERY_STRING']) + '&'
+
 	# Render
 	return render(request, 'ballots/explore.html', {
 		'ballot_list': ballot_list,
 		'f': f,
+		'page_nums': page_nums,
+		'qstring_base': qstring_base,
 	})
 
 
