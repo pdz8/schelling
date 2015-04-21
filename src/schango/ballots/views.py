@@ -166,7 +166,7 @@ def explore(request):
 	ballot_list = bm.Ballot.objects.all()
 
 	# Pagination
-	paginator = Paginator(ballot_list, 2)
+	paginator = Paginator(ballot_list, 25)
 	page_num = request.GET.get('page')
 	try:
 		ballot_list = paginator.page(page_num)
