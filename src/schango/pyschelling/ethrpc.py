@@ -368,6 +368,9 @@ if __name__ == "__main__":
 		r = rpc.is_mining()
 		sys.stdout.write(str(r))
 
+	# Add newline because exta has a terrible prompt
+	sys.stdout.write('\n')
+
 
 
 # vim: set noexpandtab:
