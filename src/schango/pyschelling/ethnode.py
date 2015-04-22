@@ -437,3 +437,8 @@ if __name__ == "__main__":
 			allowed_ip=args['--allowed_ip'])
 	vp.out('Manager server loop started\n')
 	manager.run_loop()
+
+
+# vim: set noexpandtab:
+# vim: set tabstop=4:
+# vim: set shiftwidth=4:
