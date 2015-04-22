@@ -5,7 +5,7 @@ import decimal
 import os
 
 import sha3
-import bitcoin as btc
+import pybitcointools as btc
 from docopt import docopt
 
 # This emulates a lot of the functionality of the fabled pyethereum

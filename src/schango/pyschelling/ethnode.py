@@ -6,6 +6,7 @@ import time
 from threading import Lock, Condition, Thread
 import socket
 from docopt import docopt
+import traceback
 
 import ethrpc as er
 import ethutils as eu
@@ -297,8 +298,7 @@ class ConnectionHandler(Thread):
 					self.manager.node.set_secret(self.manager.reset_key)
 			except:
 				self.manager.vp.err('Error in ethnode conn-handler\n', 0)
-				e = sys.exc_info()[0]
-				self.manager.vp.err(e + '\n', 0)
+				self.manager.vp.err(str(traceback.format_exc()) + '\n', 0)
 				break
 
 
