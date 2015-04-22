@@ -122,8 +122,10 @@ class EthNode():
 			load_time=DEFAULT_LOAD_TIME,
 			append_args=[],
 			coinbase=DEFAULT_COINBASE,
+			db_path=DEFAULT_DB_PATH,
 			verbosity=0):
-		node = cls(load_time=load_time, append_args=append_args, verbosity=verbosity)
+		node = cls(load_time=load_time, append_args=append_args,
+				verbosity=verbosity, db_path=db_path)
 		node.input_cmd('minestart')
 		return node
 
@@ -386,6 +388,7 @@ Options:
   -H --host=<host>        Host to bind on [default: 0.0.0.0]
   -P --port=<port>        Port to bind on [default: 8089]
   -A --allowed_ip=<host>  Host to accept [default: 127.0.0.1]
+  -d --db_path=<path>     Ethereum DB location
 """
 
 if __name__ == "__main__":
@@ -402,11 +405,17 @@ if __name__ == "__main__":
 	if args['--coinbase'] and eu.is_addr(args['--coinbase']):
 		coinbase = args['--coinbase']
 
+	# Get database path
+	db_path = DEFAULT_DB_PATH
+	if args['--db_path']:
+		db_path = args['--db_path']
+
 	# Start server
 	vp.out('Starting Ethereum node...\n')
 	node = EthNode.init_default(
 			verbosity=verbosity,
-			coinbase=coinbase)
+			coinbase=coinbase,
+			db_path=db_path)
 	if node.is_alive():
 		vp.out('Ethereum node running\n')
 	else:

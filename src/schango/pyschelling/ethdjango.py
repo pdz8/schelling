@@ -149,7 +149,7 @@ class SchellingCoin():
 					cb.binVoterPool,
 					[],
 					cb.abiVoterPool,
-					RPC,
+					self.rpc,
 					sender=sender)
 		return eu.remove0x(c.c_addr) if c else ''
 
@@ -174,7 +174,7 @@ class SchellingCoin():
 					cb.binDjBallot,
 					[],
 					cb.abiDjBallot,
-					RPC,
+					self.rpc,
 					sender=sender,
 					ethval=wei_deposit)
 		return eu.remove0x(c.c_addr) if c else ''
