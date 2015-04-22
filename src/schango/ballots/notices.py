@@ -23,15 +23,15 @@ TOO_EARLY = "Action is not enabled at this time."
 ## Errors ##
 ############
 
-NO_SECRET = \
-	"You do not have an Ethereum secret associated with your account. " \
-	"An Ethereum secret is needed to interact with Ethereum."
+NOT_REGISTERED = \
+	"You need to complete your account setup to interact with Ethereum. " \
+	"This includes registering an address and having an available balance."
 COMMIT_ERROR = "Could not complete commit on Ethereum."
 REVEAL_ERROR = "Could not complete reveal on Ethereum."
 TALLY_ERROR = "Could not complete tally on Ethereum."
 FORM_ERROR = "There were form errors in your request."
 ASK_PARSE_ERROR = "Could not parse options from submitted question."
-
+ETH_REQ_ERROR = "Could not complete request on Ethereum."
 
 #####################
 ## Success stories ##
@@ -41,6 +41,7 @@ COMMIT_SUCCESS = "Commit was processed on Ethereum."
 REVEAL_SUCCESS = "Reveal was processed on Ethereum."
 TALLY_SUCCESS = "Votes tallied on Ethereum. Thank you!"
 NO_ETH_SUCCESS = "Action completed but Ethereum is disabled."
+ETH_REQ_SUCCESS = "Request accepted by Ethereum."
 
 
 ##################

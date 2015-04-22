@@ -6,14 +6,13 @@ from django.conf import settings
 from django.contrib import messages, auth
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render_to_response, render
 from django.template import RequestContext
 from django.utils import timezone
 
 from pyschelling import ethutils as eu
 from pyschelling import ethdjango as ed
 import ballots.models as bm
-import ballots.context_processors as cp
 import ballots.notices as notices
 import ballots.forms as bf
 import ballots.utils as bu
@@ -24,12 +23,14 @@ import ballots.utils as bu
 
 SCOIN_API = ed.SchellingCoin(host=settings.ETHD_HOST)
 
-######################
-## Request handlers ##
-######################
+
+##################
+## Account page ##
+##################
 
 def account(request):
-	uw = cp.UserWrapper(request)
+	context = RequestContext(request)
+	uw = context['uw']
 
 	# Redirect to force user login
 	if not uw.user:
@@ -44,13 +45,15 @@ def account(request):
 		f = bf.AccountForm()
 		if secret_key:
 			f = bf.AccountForm({'secret_key': secret_key})
-		return render(request, 'ballots/account.html', {'f': f})
+		return render_to_response('ballots/account.html',
+				{'f': f}, context_instance=context)
 
 	# Assume the request is a POST
 	# Get new secret key
 	f = bf.AccountForm(request.POST)
 	if not f.is_valid():
-		return render(request, 'ballots/account.html', {'f': f})
+		return render_to_response('ballots/account.html',
+				{'f': f}, context_instance=context)
 	secret_key = f.cleaned_data['secret_key']
 
 	# Update ethereum
@@ -63,7 +66,8 @@ def account(request):
 				old=uw.address)
 		if not success:
 			messages.error(request, "Ethereum VoterPool update failed")
-			return render(request, 'ballots/account.html', {'f': f})
+			return render_to_response('ballots/account.html',
+					{'f': f}, context_instance=context)
 
 	# Update db
 	ea = uw.ethaccount
@@ -77,33 +81,32 @@ def account(request):
 	return redirect(reverse('ballots:account'))
 
 
-def logout(request):
-	auth.logout(request)
-	return redirect(reverse('ballots:explore'))
-
-
-def about(request):
-	return render(request, 'ballots/about.html')
-
+#######################
+## Create new ballot ##
+#######################
 
 def ask(request):
-	uw = cp.UserWrapper(request)
+	context = RequestContext(request)
+	uw = context['uw']
 
 	# Present empty form
 	if request.method == 'GET':
-		if not uw.secret_key:
-			messages.warning(request, notices.NO_SECRET)
+		if not uw.can_use_eth():
+			messages.warning(request, notices.NOT_REGISTERED)
 		f = bf.AskForm()
-		return render(request, 'ballots/ask.html', {'f':f})
+		return render_to_response('ballots/ask.html',
+				{'f':f}, context_instance=context)
 
 	# Assume POST
 	# Get fields and check for errors
 	f = bf.AskForm(request.POST)
-	if not uw.secret_key:
-		messages.error(request, notices.NO_SECRET)
-		return render(request, 'ballots/ask.html', {'f':f})
+	if settings.ENABLE_ETH and not uw.can_use_eth():
+		messages.error(request, notices.NOT_REGISTERED)
+		return render_to_response('ballots/ask.html',
+				{'f':f}, context_instance=context)
 	if not f.is_valid():
-		return render(request, 'ballots/ask.html', {'f':f})
+		return render_to_response('ballots/ask.html',
+				{'f':f}, context_instance=context)
 	question = f.cleaned_data['question']
 	down_payment = f.cleaned_data['down_payment']
 	start_time = f.cleaned_data['start_time']
@@ -114,7 +117,8 @@ def ask(request):
 	(_, options) = bu.parse_question(question)
 	if not options:
 		messages.error(request, notices.ASK_PARSE_ERROR)
-		return render(request, 'ballots/ask.html', {'f':f})
+		return render_to_response('ballots/ask.html',
+				{'f':f}, context_instance=context)
 	max_option = len(options)
 
 	# Update ethereum
@@ -131,7 +135,8 @@ def ask(request):
 				reveal_period)
 		if not c_addr:
 			messages.error(request, "Failed to create ballot on Ethereum")
-			return render(request, 'ballots/ask.html', {'f':f})
+			return render_to_response('ballots/ask.html',
+					{'f':f}, context_instance=context)
 
 	# Update db
 	reveal_time = start_time + datetime.timedelta(minutes=commit_period)
@@ -151,6 +156,10 @@ def ask(request):
 	messages.success(request, 'Your ballot has been created.')
 	return redirect(reverse('ballots:hex', args=[c_addr]))
 
+
+#########################
+## Explore all ballots ##
+#########################
 
 def explore(request):
 	# Pre-fill sort form
@@ -210,52 +219,58 @@ def explore(request):
 	})
 
 
+#################
+## Ballot page ##
+#################
+
 def vote(request, address=''):
-	uw = cp.UserWrapper(request)
-	context = {}
+	context = RequestContext(request)
+	uw = context['uw']
+	ctx_dict = {}
 	if not address:
 		address = request.GET.get('address') or ''
 
 	# Retrieve ballot
 	address = eu.remove0x(address)
 	b = get_object_or_404(bm.Ballot, address=address)
-	context['b'] = b
+	ctx_dict['b'] = b
 	(question, options) = bu.parse_question(
 			b.question, max_option=b.max_option)
-	context['question'] = question
+	ctx_dict['question'] = question
 
 	# Detect with phase the ballot is in
 	dt = timezone.now()
-	context['committing'] = (dt >= b.start_time and dt < b.reveal_time)
-	context['revealing'] = (dt >= b.reveal_time and dt < b.redeem_time)
-	context['redeeming'] = (dt >= b.reveal_time)
-	context['redeemed'] = (b.decision > 0)
-
-	# TODO: get decision from model or Ethereum
-	if context['redeeming']:
-		pass
+	ctx_dict['committing'] = (dt >= b.start_time and dt < b.reveal_time)
+	ctx_dict['revealing'] = (dt >= b.reveal_time and dt < b.redeem_time)
+	ctx_dict['redeeming'] = (dt >= b.reveal_time)
+	ctx_dict['redeemed'] = (b.decision > 0)
 
 	# Display ballot with empty form
 	if request.method == 'GET':
-		context['f'] = bf.RevealForm(options, )
-		return render(request, 'ballots/vote.html', context)
+		ctx_dict['f'] = bf.RevealForm(options, )
+		return render_to_response('ballots/vote.html',
+				ctx_dict, context_instance=context)
 	
 	# Assume we have a POST
 	# Get fields and check for errors
-	context['f'] = f = bf.RevealForm(options, request.POST)
-	if not uw.secret_key:
-		messages.error(request, notices.NO_SECRET)
-		return render(request, 'ballots/vote.html', context)
+	ctx_dict['f'] = f = bf.RevealForm(options, request.POST)
+	if settings.ENABLE_ETH and not uw.can_use_eth():
+		messages.error(request, notices.NOT_REGISTERED)
+		return render_to_response('ballots/vote.html',
+				ctx_dict, context_instance=context)
 	if not f.is_valid():
 		messages.error(request, notices.FORM_ERROR)
-		return render(request, 'ballots/vote.html', context)
+		return render_to_response('ballots/vote.html',
+				ctx_dict, context_instance=context)
 	vote_val = f.cleaned_data['vote_val']
 	nonce = f.cleaned_data['nonce']
 
-	# TODO: actually handle voting here
+	# Actual interaction with Ethereum
 	success = True
 	if settings.ENABLE_ETH and not b.debug_only:
-		if context['committing'] and 'commit' in request.POST:
+
+		# Commit to vote
+		if 'commit' in request.POST:
 			success = SCOIN_API.submit_hash(
 					uw.secret_key,
 					b.address,
@@ -266,7 +281,9 @@ def vote(request, address=''):
 				messages.error(request, notices.COMMIT_ERROR)
 			else:
 				messages.success(request, notices.COMMIT_SUCCESS)
-		elif context['revealing'] and 'reveal' in request.POST:
+
+		# Reveal vote
+		elif 'reveal' in request.POST:
 			success = SCOIN_API.reveal_vote(
 					uw.secret_key,
 					b.address,
@@ -276,9 +293,11 @@ def vote(request, address=''):
 				messages.error(request, notices.REVEAL_ERROR)
 			else:
 				messages.success(request, notices.REVEAL_SUCCESS)
-		elif context['redeeming'] and 'tally' in request.POST:
+
+		# Tally vote
+		elif 'tally' in request.POST:
 			decision = SCOIN_API.get_decision(b.address)
-			if decision:
+			if decision or ctx_dict['redeemed']:
 				messages.success(request,'Votes already tallied.')
 			elif not SCOIN_API.get_num_revealed(b.address):
 				messages.warning(request,'No votes were recorded.')
@@ -289,18 +308,34 @@ def vote(request, address=''):
 					messages.error(request, notices.TALLY_ERROR)
 				else:
 					messages.success(request, notices.TALLY_SUCCESS)
-		elif context['redeemed']:
-			messages.success(request,'Votes already tallied.')
+			if decision:
+				b.decision = decision
+				b.save()
+
+		# What did we receive?
 		else:
-			messages.warning(request, notices.TOO_EARLY)
-	else:
-		messages.success(request, notices.NO_ETH_SUCCESS)
+			success = False
+			messages.error(request, "Invalid request.")
 
 	# Check success
 	if not success:
-		return render(request, 'ballots/vote.html', context)
+		return render_to_response('ballots/vote.html',
+				ctx_dict, context_instance=context)
 	else:
 		return redirect('ballots:hex', address=address)
+
+
+#################
+## Minor pages ##
+#################
+
+def logout(request):
+	auth.logout(request)
+	return redirect(reverse('ballots:explore'))
+
+
+def about(request):
+	return render(request, 'ballots/about.html')
 
 
 def debug(request):

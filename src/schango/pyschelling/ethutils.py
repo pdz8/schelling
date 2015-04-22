@@ -2,6 +2,7 @@
 import sys
 import re
 import decimal
+import os
 
 import sha3
 import bitcoin as btc
@@ -14,6 +15,10 @@ from docopt import docopt
 ##################
 ## Crypto utils ##
 ##################
+
+# Create new Ethereum account
+def gen_secret():
+	return os.urandom(32).encode('hex')
 
 # sha3
 def keccak(x, treat_as_hex=True):
