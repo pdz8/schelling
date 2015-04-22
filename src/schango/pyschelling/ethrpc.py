@@ -214,7 +214,7 @@ class Contract():
 		# Append arguments
 		for i in range(len(types)):
 			typ = types[i]
-			arg = args[i]
+			arg = eu.remove_unicode(args[i])
 			if typ in ['uint256','hash256','address'] or 'hash' in typ:
 				if isinstance(arg, str):
 					retval += padzeros(arg)
@@ -252,6 +252,10 @@ class Contract():
 	# Make transaction
 	def transact(self, fname, args, ethval=0, sender=None,
 			c_addr=None, is_call=False):
+		if sender:
+			sender = eu.remove_unicode(sender)
+		if c_addr:
+			c_addr = eu.remove_unicode(c_addr)
 		if not c_addr:
 			c_addr = self.c_addr
 		data = Contract.abi_to_hex(self.input_types, fname, args)

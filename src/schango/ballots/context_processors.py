@@ -49,7 +49,7 @@ class UserWrapper():
 			if call_eth and settings.ENABLE_ETH and self.address:
 				self.balance = SCOIN_API.get_balance(self.address)
 				if settings.VOTER_POOL_ADDRESS:
-					self.is_registered = ed.is_voter(
+					self.is_registered = SCOIN_API.is_voter(
 							settings.VOTER_POOL_ADDRESS,
 							self.address)
 

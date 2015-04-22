@@ -172,7 +172,7 @@ class SchellingCoin():
 		with en.ManagerClient(secret_key, host=self.host, port=self.man_port):
 			c = er.Contract.create(
 					cb.binDjBallot,
-					[],
+					args,
 					cb.abiDjBallot,
 					self.rpc,
 					sender=sender,

@@ -17,7 +17,9 @@ import ethutils as eu
 
 # UNIX eth defaults
 DEFAULT_ETH_EXE = '/usr/bin/eth'
-DEFAULT_DB_PATH = '~/.ethereum'
+DEFAULT_DB_PATH = None
+if sys.platform not in ['win32','cygwin']:
+	DEFAULT_DB_PATH = os.environ['HOME'] + '/.ethereum'
 DEFAULT_JSON_PORT = 8080
 DEFAULT_LISTEN_PORT = 30303
 DEFAULT_REMOTE_IP = '5.1.83.225'

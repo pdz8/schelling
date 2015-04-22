@@ -105,7 +105,8 @@ class AskForm(forms.Form):
 			max_digits=100,
 			widget=forms.NumberInput(attrs={
 					'class':'form-control',
-					'step':'0.5'}))
+					# 'step':'0.5',
+					}))
 	start_time = forms.DateTimeField(
 			label='Start Time',
 			initial=timezone.now(),

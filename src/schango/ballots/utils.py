@@ -7,7 +7,7 @@ def parse_question(s, max_option=None):
 	# Parse the max option if necessary
 	if not max_option:
 		max_option = 0
-		while s.find(str(max_option + 1) + '-'):
+		while s.find(str(max_option + 1) + '-') >= 0:
 			max_option += 1
 
 	# Validate input

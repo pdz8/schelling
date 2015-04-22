@@ -111,6 +111,9 @@ def str_from_u256(h):
 
 # Extract integer
 def int_from_u256(h):
+	h = remove0x(h)
+	if h == '':
+		return 0 # TODO this is a hack
 	return int(h,16)
 
 # Extract boolean
@@ -176,6 +179,14 @@ def is_addr(s):
 # Convert hex string to byte string
 def hex_to_bytes(h):
 	return removeL(remove0x(h)).decode('hex')
+
+# Remove unicode
+def remove_unicode(s):
+	if isinstance(s, unicode):
+		# if is_hex(s):
+		# 	return s.decode('hex').encode('hex')
+		s = s.encode('utf-8', 'ignore')
+	return s
 
 
 #########################
