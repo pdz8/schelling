@@ -299,12 +299,14 @@ contract DjBallot {
             if (voterMap[revealers[i]].choice == decision) {
                 revealers[i].send(reward);
             }
+            i++;
         }
 
         // Notify waiters
         i = 0;
         while (i < numWaiting) {
             IWait(waiters[i]).trigger(decision);
+            i++;
         }
 
         // Output decision
