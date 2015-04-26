@@ -247,11 +247,36 @@ def vote(request, address=''):
 
 	# Display ballot with empty form
 	if request.method == 'GET':
-		ctx_dict['f'] = bf.RevealForm(options, )
+		ctx_dict['f'] = bf.RevealForm(options)
 		return render_to_response('ballots/vote.html',
 				ctx_dict, context_instance=context)
-	
-	# Assume we have a POST
+
+	###########################
+	## Assume we have a POST ##
+	###########################
+
+	# Handle a tally
+	if 'tally' in request.POST:
+		if not settings.ENABLE_ETH or b.debug_only:
+			messages.error(request, "Cannot tally; Ethereum is disabled.")
+			return redirect('ballots:hex', address=address)
+		decision = SCOIN_API.get_decision(b.address)
+		if decision or ctx_dict['redeemed']:
+			messages.success(request,'Votes already tallied.')
+		elif not SCOIN_API.get_num_revealed(b.address):
+			messages.warning(request,'No votes were recorded.')
+		else:
+			decision = SCOIN_API.tally(uw.secret_key, b.address)
+			success = bool(decision)
+			if not success:
+				messages.error(request, notices.TALLY_ERROR)
+			else:
+				messages.success(request, notices.TALLY_SUCCESS)
+		if decision:
+			b.decision = decision
+			b.save()
+		return redirect('ballots:hex', address=address)
+
 	# Get fields and check for errors
 	ctx_dict['f'] = f = bf.RevealForm(options, request.POST)
 	if settings.ENABLE_ETH and not uw.can_use_eth():
@@ -293,24 +318,6 @@ def vote(request, address=''):
 				messages.error(request, notices.REVEAL_ERROR)
 			else:
 				messages.success(request, notices.REVEAL_SUCCESS)
-
-		# Tally vote
-		elif 'tally' in request.POST:
-			decision = SCOIN_API.get_decision(b.address)
-			if decision or ctx_dict['redeemed']:
-				messages.success(request,'Votes already tallied.')
-			elif not SCOIN_API.get_num_revealed(b.address):
-				messages.warning(request,'No votes were recorded.')
-			else:
-				decision = SCOIN_API.tally(uw.secret_key, b.address)
-				success = bool(decision)
-				if not success:
-					messages.error(request, notices.TALLY_ERROR)
-				else:
-					messages.success(request, notices.TALLY_SUCCESS)
-			if decision:
-				b.decision = decision
-				b.save()
 
 		# What did we receive?
 		else:
