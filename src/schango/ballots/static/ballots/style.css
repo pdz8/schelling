@@ -51,3 +51,18 @@ span.clear{
     clear: both;
     display: block;
 }
+.put-right{
+    float: right;
+}
+
+
+/* Poll form */
+ul.poll-form-options{
+    padding: 0;
+    list-style: none;
+}
+.poll-form textarea{
+    resize: none;
+}
+
+

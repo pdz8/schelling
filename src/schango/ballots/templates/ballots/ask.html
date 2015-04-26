@@ -9,18 +9,40 @@ active
 {% endblock %}
 
 {% block content %}
+
+
 <form role="form" action="{% url 'ballots:ask' %}" method="post">
   {% csrf_token %}
 
-  <div class="form-group limited-chars">
-    {{ f.question.label_tag }}
-    <p style="float: right; margin-bottom: 0px;">
-      <span class="char-used">0</span>
-      /
-      <span class="char-max">0</span>
-    </p>
-    {{ f.question }}
+  {# Enter the question #}
+  <div class="form-group">
+
+    {# Actual form that gets filled #}
+    <div id="limited-dump" class="limited-chars">
+      {{ f.question.label_tag }}
+      <p style="float: right; margin-bottom: 0px;">
+        <span class="char-used">0</span>
+        /
+        <span class="char-max">0</span>
+      </p>
+      <div class="limited-area" hidden>
+        {{ f.question }}
+      </div>
+    </div>
     {{ f.question.errors }}
+
+    {# Nice ui #}
+    <div for="limited-dump" class="poll-form">
+      <textarea class="form-control poll-form-area" placeholder="Ask your question here"></textarea>
+      <ul class="poll-form-options"></ul>
+      <div class="put-right">
+        <a class="poll-form-add">Add</a>
+        /
+        <a class="poll-form-rm">Remove</a>
+      </div>
+      <span class="clear"></span>
+    </div>
+
   </div>
 
   <div class="row">
