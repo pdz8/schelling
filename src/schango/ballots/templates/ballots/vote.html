@@ -29,20 +29,14 @@ active
   <form role="form" action="{% url 'ballots:hex' b.address %}" method="post">
     {% csrf_token %}
 
+    {# Vote selector #}
     {% if committing or revealing %}
-      <div class="row">
-        <div class="form-group col-sm-6">
-          {{ f.vote_val.label_tag }}
-          <div class="dj-radio">
-            {{ f.vote_val }}
-          </div>
-          {{ f.vote_val.errors }}
-        </div>
-        <div class="form-group col-sm-6">
-          {{ f.nonce.label_tag }}
-          {{ f.nonce }}
-          {{ f.nonce.errors }}
-        </div>
+      <div class="form-group">
+        {{ f.vote_val.label_tag }}
+        <h4 class="dj-radio not-hdr">
+          {{ f.vote_val }}
+        </h4>
+        {{ f.vote_val.errors }}
       </div>
     {% endif %}
 

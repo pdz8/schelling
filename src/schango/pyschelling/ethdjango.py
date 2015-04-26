@@ -89,8 +89,9 @@ class SchellingCoin():
 
 
 	# Commit to a vote
-	def submit_hash(self, secret_key, c_addr, vote_val, nonce, deposit):
+	def submit_hash(self, secret_key, c_addr, vote_val, deposit):
 		sender = eu.priv_to_addr(secret_key)
+		nonce = secret_key + c_addr
 		nonce_hash = eu.keccak(nonce, False)
 		wei_deposit = eu.denom_to_wei(deposit, 'ether', True)
 		h = self.ballot.call(
@@ -109,8 +110,9 @@ class SchellingCoin():
 
 
 	# Reveal vote
-	def reveal_vote(self, secret_key, c_addr, vote_val, nonce):
+	def reveal_vote(self, secret_key, c_addr, vote_val):
 		sender = eu.priv_to_addr(secret_key)
+		nonce = secret_key + c_addr
 		nonce_hash = eu.keccak(nonce, False)
 		success = False
 		with en.ManagerClient(secret_key, host=self.host, port=self.man_port):

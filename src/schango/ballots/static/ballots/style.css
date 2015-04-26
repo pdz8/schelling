@@ -14,7 +14,10 @@
     list-style: none;
 }
 .dj-radio label{
-    font-weight: normal;
+    font-weight: inherit;
+    font-family: inherit;
+    color: inherit;
+    font-size: inherit;
 }
 .dj-radio input[type=radio]{
     margin-right: 0.5em;

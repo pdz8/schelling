@@ -1,17 +1,6 @@
 from django.contrib import messages
 
 
-####################
-## Helper methods ##
-####################
-
-def test_success(request, success, good, bad):
-	if success:
-		messages.success(request, good)
-	else:
-		messages.error(request, bad)
-
-
 ##############
 ## Warnings ##
 ##############
@@ -54,3 +43,34 @@ ASK_TEMPLATE = \
 Is the sky blue?
 1-Yeah duh
 2-No, not at midnight"""
+
+
+####################
+## Helper methods ##
+####################
+
+ERROR_DICT = {
+	'reveal': REVEAL_ERROR,
+	'commit': COMMIT_ERROR,
+	'tally': TALLY_ERROR,
+}
+SUCCESS_DICT = {
+	'reveal': REVEAL_SUCCESS,
+	'commit': COMMIT_SUCCESS,
+	'tally': TALLY_SUCCESS,
+}
+
+# Easier way to post light error/success messages
+def test_success(request, success, action=None,
+		error_msg=None, success_msg=None):
+	# Get messages
+	if action:
+		error_msg = ERROR_DICT[action]
+		success_msg = SUCCESS_DICT[action]
+
+	# Append messages
+	if success:
+		messages.success(request, success_msg)
+	else:
+		messages.error(request, error_msg)
+

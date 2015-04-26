@@ -232,11 +232,11 @@ def vote(request, address=''):
 
 	# Retrieve ballot
 	address = eu.remove0x(address)
-	b = get_object_or_404(bm.Ballot, address=address)
-	ctx_dict['b'] = b
+	b = ctx_dict['b'] = get_object_or_404(bm.Ballot, address=address)
 	(question, options) = bu.parse_question(
 			b.question, max_option=b.max_option)
 	ctx_dict['question'] = question
+	f = ctx_dict['f'] = bf.RevealForm(options)
 
 	# Detect with phase the ballot is in
 	dt = timezone.now()
@@ -247,13 +247,20 @@ def vote(request, address=''):
 
 	# Display ballot with empty form
 	if request.method == 'GET':
-		ctx_dict['f'] = bf.RevealForm(options)
 		return render_to_response('ballots/vote.html',
 				ctx_dict, context_instance=context)
 
 	###########################
 	## Assume we have a POST ##
 	###########################
+
+	# Assert that there is no Ethereum conflict
+	if settings.ENABLE_ETH and not uw.can_use_eth():
+		messages.error(request, notices.NOT_REGISTERED)
+		return render_to_response('ballots/vote.html',
+				ctx_dict, context_instance=context)
+	use_eth = settings.ENABLE_ETH and uw.can_use_eth() and not b.debug_only
+	success = True
 
 	# Handle a tally
 	if 'tally' in request.POST:
@@ -268,61 +275,38 @@ def vote(request, address=''):
 		else:
 			decision = SCOIN_API.tally(uw.secret_key, b.address)
 			success = bool(decision)
-			if not success:
-				messages.error(request, notices.TALLY_ERROR)
-			else:
-				messages.success(request, notices.TALLY_SUCCESS)
+			notices.test_success(request, success, action='tally')
 		if decision:
 			b.decision = decision
 			b.save()
-		return redirect('ballots:hex', address=address)
 
-	# Get fields and check for errors
-	ctx_dict['f'] = f = bf.RevealForm(options, request.POST)
-	if settings.ENABLE_ETH and not uw.can_use_eth():
-		messages.error(request, notices.NOT_REGISTERED)
-		return render_to_response('ballots/vote.html',
-				ctx_dict, context_instance=context)
-	if not f.is_valid():
-		messages.error(request, notices.FORM_ERROR)
-		return render_to_response('ballots/vote.html',
-				ctx_dict, context_instance=context)
-	vote_val = f.cleaned_data['vote_val']
-	nonce = f.cleaned_data['nonce']
+	# Handle vote submission
+	elif 'commit' in request.POST or 'reveal' in request.POST:
 
-	# Actual interaction with Ethereum
-	success = True
-	if settings.ENABLE_ETH and not b.debug_only:
+		# Get vote
+		ctx_dict['f'] = f = bf.RevealForm(options, request.POST)
+		if not f.is_valid():
+			messages.error(request, notices.FORM_ERROR)
+			return render_to_response('ballots/vote.html',
+					ctx_dict, context_instance=context)
+		vote_val = f.cleaned_data['vote_val']
 
 		# Commit to vote
-		if 'commit' in request.POST:
+		if 'commit' in request.POST and use_eth:
 			success = SCOIN_API.submit_hash(
 					uw.secret_key,
 					b.address,
 					vote_val,
-					nonce,
 					b.down_payment)
-			if not success:
-				messages.error(request, notices.COMMIT_ERROR)
-			else:
-				messages.success(request, notices.COMMIT_SUCCESS)
+			notices.test_success(request, success, action='commit')
 
 		# Reveal vote
-		elif 'reveal' in request.POST:
+		elif use_eth: # and 'reveal' in request.POST
 			success = SCOIN_API.reveal_vote(
 					uw.secret_key,
 					b.address,
-					vote_val,
-					nonce)
-			if not success:
-				messages.error(request, notices.REVEAL_ERROR)
-			else:
-				messages.success(request, notices.REVEAL_SUCCESS)
-
-		# What did we receive?
-		else:
-			success = False
-			messages.error(request, "Invalid request.")
+					vote_val)
+			notices.test_success(request, success, action='reveal')
 
 	# Check success
 	if not success:

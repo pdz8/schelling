@@ -27,12 +27,6 @@ class RevealForm(forms.Form):
 			required=True,
 			min_value=1,
 			widget=forms.NumberInput(attrs={'class':'form-control'}))
-	nonce = forms.CharField(
-			label='Secret Nonce',
-			required=True,
-			max_length=32,
-			widget=forms.TextInput(attrs={'class':'form-control'}))
-			# widget=forms.PasswordInput(attrs={'class':'form-control'}))
 	
 	def __init__(self, choices, *args, **kwargs):
 		super(RevealForm, self).__init__(*args, **kwargs)
