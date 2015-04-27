@@ -93,7 +93,7 @@ contract VoterPool {
 
 // Interface of contract waiting to be triggered
 contract IWait {
-    function trigger(uint256 tval) {
+    function sc_trigger(uint256 tval) {
         return;
     }
 }
@@ -120,7 +120,7 @@ contract DjBallot {
 
     // TODO
     // When array support comes out allow the question string to be stored
-    string32[5] question;
+    string32[8] question;
 
     // List of address that have submitted hashes
     struct Participant {
@@ -148,8 +148,8 @@ contract DjBallot {
     function DjBallot(
             address _pool, uint256 _maxOption, uint256 _downPayment,
             uint256 _startTime, uint256 _votingPeriod, uint256 _revealPeriod,
-            string32 _q0, string32 _q1, string32 _q2,
-            string32 _q3, string32 _q4) {
+            string32 _q0, string32 _q1, string32 _q2, string32 _q3,
+            string32 _q4, string32 _q5, string32 _q6, string32 _q7) {
         pool = _pool;
         maxOption = _maxOption;
         downPayment = _downPayment;
@@ -164,14 +164,17 @@ contract DjBallot {
         question[2] = _q2;
         question[3] = _q3;
         question[4] = _q4;
+        question[5] = _q5;
+        question[6] = _q6;
+        question[7] = _q7;
     }
 
     // Signature of constructor hack
     function constructor_sig(
             address _pool, uint256 _maxOption, uint256 _downPayment,
             uint256 _startTime, uint256 _votingPeriod, uint256 _revealPeriod,
-            string32 _q0, string32 _q1, string32 _q2,
-            string32 _q3, string32 _q4) {}
+            string32 _q0, string32 _q1, string32 _q2, string32 _q3,
+            string32 _q4, string32 _q5, string32 _q6, string32 _q7) {}
 
 
     ////////////////////////
@@ -179,9 +182,13 @@ contract DjBallot {
     ////////////////////////
 
     // Register a trigger for another contract
-    function wait_for_decision() {
-        waiters[numWaiting] = msg.sender;
+    function register_waiter(address w) return(bool success) {
+        waiters[numWaiting] = w;
         numWaiting++;
+        return true;
+    }
+    function wait_for_decision() return(bool success) {
+        return this.register_waiter(msg.sender);
     }
 
     // Submit hash for myself
@@ -305,7 +312,7 @@ contract DjBallot {
         // Notify waiters
         i = 0;
         while (i < numWaiting) {
-            IWait(waiters[i]).trigger(decision);
+            IWait(waiters[i]).sc_trigger(decision);
             i++;
         }
 
@@ -342,12 +349,16 @@ contract DjBallot {
     }
     function get_question() constant returns(
             string32 ret_q0, string32 ret_q1, string32 ret_q2,
-            string32 ret_q3, string32 ret_q4) {
+            string32 ret_q3, string32 ret_q4, string32 ret_q5,
+            string32 ret_q6, string32 ret_q7) {
         ret_q0 = question[0];
         ret_q1 = question[1];
         ret_q2 = question[2];
         ret_q3 = question[3];
         ret_q4 = question[4];
+        ret_q5 = question[5];
+        ret_q6 = question[6];
+        ret_q7 = question[7];
     }
     function get_version() constant returns(uint256 ret) {
         return 1;

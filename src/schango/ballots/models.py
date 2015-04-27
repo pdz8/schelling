@@ -3,6 +3,7 @@ import datetime
 from django.db import models
 from django.contrib.auth.models import User
 
+import pyschelling.ethdjango as ed
 import pyschelling.ethrpc as er
 import pyschelling.ethutils as eu
 import pyschelling.contractbin as cb
@@ -12,7 +13,7 @@ import pyschelling.contractbin as cb
 ## Constants ##
 ###############
 
-MAX_QUESTION_LEN = 5*32
+MAX_QUESTION_LEN = ed.MAX_QUESTION_LEN
 
 
 #######################

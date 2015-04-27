@@ -84,7 +84,7 @@ class CommitForm(RevealForm):
 class AskForm(forms.Form):
 	question = forms.CharField(
 			label='Question',
-			initial=notices.ASK_TEMPLATE,
+			# initial=notices.ASK_TEMPLATE,
 			required=True,
 			max_length=bm.MAX_QUESTION_LEN,
 			widget=forms.Textarea(attrs={

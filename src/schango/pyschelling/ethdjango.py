@@ -5,6 +5,12 @@ import ethutils as eu
 import ethrpc as er
 import contractbin as cb
 
+###############
+## Constants ##
+###############
+
+QUESTION_ARR_LEN = 8
+MAX_QUESTION_LEN = QUESTION_ARR_LEN * 32
 
 #############
 ## Helpers ##
@@ -183,7 +189,7 @@ class SchellingCoin():
 			datetime_to_utc(start_time),
 			commit_period * 60,
 			reveal_period * 60,
-		] + eu.str_to_string32(question, arr_len=5)
+		] + eu.str_to_string32(question, arr_len=QUESTION_ARR_LEN)
 		with en.ManagerClient(secret_key, host=self.host, port=self.man_port):
 			c = er.Contract.create(
 					cb.binDjBallot,
