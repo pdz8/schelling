@@ -3,6 +3,9 @@
 
 {% block content_title %}
 My Account
+<a data-toggle="modal" data-target="#transfer_modal" style="float: right;">
+  <span class="glyphicon glyphicon-transfer" aria-hidden="true"></span>
+</a>
 {% endblock %}
 
 {% block acc_tab_class %}
@@ -10,6 +13,40 @@ active
 {% endblock %}
 
 {% block content %}
+
+{# Transfer Ether to another account #}
+<div id="transfer_modal" class="modal" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form class="modal-form" action="{% url 'ballots:account' %}" method="post">
+        {% csrf_token %}
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Transfer funds</h4>
+        </div>
+        <div class="modal-body row">
+          <div class="form-group col-sm-8">
+            {{ tf.recipient.label_tag }}
+            {{ tf.recipient }}
+            {{ tf.recipient.errors }}
+          </div>
+          <div class="form-group col-sm-4">
+            {{ tf.transfer_amount.label_tag }}
+            {{ tf.transfer_amount }}
+            {{ tf.transfer_amount.errors }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button name="transfer" type="submit" class="btn btn-default">
+            Transact
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# When is this false? #}
 {% if user and user.id %}
 
   <label>Name</label>
@@ -47,7 +84,6 @@ active
     </div>
     <button type="submit" class="btn btn-default">Register address</button>
   </form>
-  
 
 {% else %}
   <div class="alert alert-warning">

@@ -31,6 +31,8 @@ SCOIN_API = ed.SchellingCoin(host=settings.ETHD_HOST)
 def account(request):
 	context = RequestContext(request)
 	uw = context['uw']
+	f = bf.AccountForm()
+	tf = bf.TransferForm()
 
 	# Redirect to force user login
 	if not uw.user:
@@ -42,18 +44,43 @@ def account(request):
 	# Provide empty form or old values
 	if request.method == 'GET':
 		secret_key = uw.secret_key
-		f = bf.AccountForm()
 		if secret_key:
 			f = bf.AccountForm({'secret_key': secret_key})
 		return render_to_response('ballots/account.html',
-				{'f': f}, context_instance=context)
+				{'f': f, 'tf': tf}, context_instance=context)
 
-	# Assume the request is a POST
+	##########
+	## POST ##
+	##########
+
+	# Do ether transfer
+	if 'transfer' in request.POST:
+		tf = bf.TransferForm(request.POST)
+		if not tf.is_valid() or not eu.is_addr(tf.cleaned_data['recipient']):
+			messages.error(request, "Transfer form errors")
+			return render_to_response('ballots/account.html',
+				{'f': f, 'tf': tf}, context_instance=context)
+		if not settings.ENABLE_ETH:
+			messages.error(request, "Ethereum not enabled")
+			return render_to_response('ballots/account.html',
+				{'f': f, 'tf': tf}, context_instance=context)
+		success = SCOIN_API.transact(
+				secret_key,
+				tf.cleaned_data['recipient'],
+				tf.cleaned_data['transfer_amount'])
+		notices.test_success(request, success, action='transfer')
+		if not success:
+			return render_to_response('ballots/account.html',
+					{'f': f, 'tf': tf}, context_instance=context)
+		else:
+			return redirect(reverse('ballots:account'))
+
+
 	# Get new secret key
 	f = bf.AccountForm(request.POST)
 	if not f.is_valid():
 		return render_to_response('ballots/account.html',
-				{'f': f}, context_instance=context)
+				{'f': f, 'tf': tf}, context_instance=context)
 	secret_key = f.cleaned_data['secret_key']
 
 	# Update ethereum
@@ -67,7 +94,7 @@ def account(request):
 		if not success:
 			messages.error(request, "Ethereum VoterPool update failed")
 			return render_to_response('ballots/account.html',
-					{'f': f}, context_instance=context)
+					{'f': f, 'tf': tf}, context_instance=context)
 
 	# Update db
 	ea = uw.ethaccount

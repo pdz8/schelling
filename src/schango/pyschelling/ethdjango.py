@@ -33,6 +33,19 @@ class SchellingCoin():
 		self.pool = er.Contract(cb.abiVoterPool, rpc=self.rpc)
 		self.ballot = er.Contract(cb.abiDjBallot, rpc=self.rpc)
 
+	######################
+	## General Ethereum ##
+	######################
+
+	def transact(self, secret_key, recip_addr, ethval):
+		sender = eu.priv_to_addr(secret_key)
+		wei_ethval = eu.denom_to_wei(ethval, denom='ether', hex_output=True)
+		try:
+			self.rpc.transact(recip_addr, wei_ethval, None, None, sender=sender)
+			return True
+		except:
+			return False
+
 
 	##################
 	## Transactions ##

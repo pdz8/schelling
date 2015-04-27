@@ -21,11 +21,13 @@ TALLY_ERROR = "Could not complete tally on Ethereum."
 FORM_ERROR = "There were form errors in your request."
 ASK_PARSE_ERROR = "Could not parse options from submitted question."
 ETH_REQ_ERROR = "Could not complete request on Ethereum."
+TRANSFER_ERROR = "Could not complete transfer on Ethereum."
 
 #####################
 ## Success stories ##
 #####################
 
+TRANSFER_SUCCESS = "Transfer was completed on Ethereum."
 COMMIT_SUCCESS = "Commit was processed on Ethereum."
 REVEAL_SUCCESS = "Reveal was processed on Ethereum."
 TALLY_SUCCESS = "Votes tallied on Ethereum. Thank you!"
@@ -53,11 +55,13 @@ ERROR_DICT = {
 	'reveal': REVEAL_ERROR,
 	'commit': COMMIT_ERROR,
 	'tally': TALLY_ERROR,
+	'transfer': TRANSFER_ERROR,
 }
 SUCCESS_DICT = {
 	'reveal': REVEAL_SUCCESS,
 	'commit': COMMIT_SUCCESS,
 	'tally': TALLY_SUCCESS,
+	'transfer': TRANSFER_SUCCESS,
 }
 
 # Easier way to post light error/success messages

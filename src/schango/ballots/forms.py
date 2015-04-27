@@ -119,3 +119,18 @@ class AskForm(forms.Form):
 			min_value=1,
 			widget=forms.NumberInput(attrs={'class':'form-control'}))
 
+
+class TransferForm(forms.Form):
+	transfer_amount = forms.DecimalField(
+			label='Transfer Amount (ether)',
+			initial=Decimal(1.5),
+			min_value=Decimal(0),
+			required=True,
+			decimal_places=18,
+			max_digits=100,
+			widget=forms.NumberInput(attrs={'class':'form-control'}))
+	recipient = forms.CharField(
+			label='Recipient Address (hex)',
+			max_length=42,
+			min_length=40,
+			widget=forms.TextInput(attrs={'class':'form-control'}))
