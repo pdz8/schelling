@@ -20,6 +20,10 @@ class AccountForm(forms.Form):
 			widget=forms.TextInput(attrs={'class':'form-control'}))
 			# widget=forms.PasswordInput(attrs={'class':'form-control'}))
 
+	def __init__(self, *args, **kwargs):
+		kwargs.setdefault('label_suffix', '')
+		super(AccountForm, self).__init__(*args, **kwargs)
+
 
 class RevealForm(forms.Form):
 	vote_val = forms.IntegerField(
@@ -29,6 +33,7 @@ class RevealForm(forms.Form):
 			widget=forms.NumberInput(attrs={'class':'form-control'}))
 	
 	def __init__(self, choices, *args, **kwargs):
+		kwargs.setdefault('label_suffix', '')
 		super(RevealForm, self).__init__(*args, **kwargs)
 		if choices:
 			self.fields['vote_val'] = forms.TypedChoiceField(
@@ -72,13 +77,9 @@ class SortForm(forms.Form):
 				attrs={'class':'form-control'}
 			))
 
-class CommitForm(RevealForm):
-	secret_key = forms.CharField(
-			label='Secret Key (hex)',
-			max_length=66,
-			min_length=64,
-			widget=forms.TextInput(attrs={'class':'form-control'}))
-			# widget=forms.PasswordInput(attrs={'class':'form-control'}))
+	def __init__(self, *args, **kwargs):
+		kwargs.setdefault('label_suffix', '')
+		super(SortForm, self).__init__(*args, **kwargs)
 
 
 class AskForm(forms.Form):
@@ -119,6 +120,10 @@ class AskForm(forms.Form):
 			min_value=1,
 			widget=forms.NumberInput(attrs={'class':'form-control'}))
 
+	def __init__(self, *args, **kwargs):
+		kwargs.setdefault('label_suffix', '')
+		super(AskForm, self).__init__(*args, **kwargs)
+
 
 class TransferForm(forms.Form):
 	transfer_amount = forms.DecimalField(
@@ -131,6 +136,11 @@ class TransferForm(forms.Form):
 			widget=forms.NumberInput(attrs={'class':'form-control'}))
 	recipient = forms.CharField(
 			label='Recipient Address (hex)',
+			required=True,
 			max_length=42,
 			min_length=40,
 			widget=forms.TextInput(attrs={'class':'form-control'}))
+
+	def __init__(self, *args, **kwargs):
+		kwargs.setdefault('label_suffix', '')
+		super(TransferForm, self).__init__(*args, **kwargs)

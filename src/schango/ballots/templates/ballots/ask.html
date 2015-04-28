@@ -45,6 +45,7 @@ active
 
   </div>
 
+  {# Standard inputs #}
   <div class="row">
     <div class="form-group col-sm-6">
       {{ f.start_time.label_tag }}
@@ -57,7 +58,6 @@ active
       {{ f.down_payment.errors }}
     </div>
   </div>
-
   <div class="row">
     <div class="form-group col-sm-6">
       {{ f.commit_period.label_tag }}
@@ -71,7 +71,10 @@ active
     </div>
   </div>
 
-  <button name="create" type="submit" class="btn btn-default">Create Contract</button>
+  {# Submit this ish #}
+  <button name="create" type="submit" class="btn btn-default">
+    Create Contract
+  </button>
 
 </form>
 {% endblock %}

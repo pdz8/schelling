@@ -91,14 +91,6 @@ contract VoterPool {
 }
 
 
-// Interface of contract waiting to be triggered
-contract IWait {
-    function sc_trigger(uint256 tval) {
-        return;
-    }
-}
-
-
 // Schelling ballot that does not break values into binary representation
 // Named DjBallot for Django
 contract DjBallot {
@@ -134,10 +126,6 @@ contract DjBallot {
     // Array of vote revealers
     mapping (uint256 => address) revealers;
     uint256 numRevealed;
-
-    // Array of contracts to trigger
-    mapping (uint256 => address) waiters;
-    uint256 numWaiting;
 
     // Vote tallying
     mapping (uint256 => uint256) tally;
@@ -180,16 +168,6 @@ contract DjBallot {
     ////////////////////////
     // Instance functions //
     ////////////////////////
-
-    // Register a trigger for another contract
-    function register_waiter(address w) return(bool success) {
-        waiters[numWaiting] = w;
-        numWaiting++;
-        return true;
-    }
-    function wait_for_decision() return(bool success) {
-        return this.register_waiter(msg.sender);
-    }
 
     // Submit hash for myself
     function submit_hash(hash256 h)
@@ -306,13 +284,6 @@ contract DjBallot {
             if (voterMap[revealers[i]].choice == decision) {
                 revealers[i].send(reward);
             }
-            i++;
-        }
-
-        // Notify waiters
-        i = 0;
-        while (i < numWaiting) {
-            IWait(waiters[i]).sc_trigger(decision);
             i++;
         }
 
