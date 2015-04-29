@@ -29,10 +29,12 @@ class Ballot(models.Model):
 	start_time = models.DateTimeField()
 	reveal_time = models.DateTimeField()
 	redeem_time = models.DateTimeField()
-	down_payment = models.DecimalField(
-			'Ether deposit',
-			max_digits=100,
-			decimal_places=18)
+	down_payment = models.CharField(
+			max_length=64)
+	# down_payment = models.DecimalField(
+	# 		'Ether deposit',
+	# 		max_digits=100,
+	# 		decimal_places=18)
 	max_option = models.IntegerField()
 	decision = models.IntegerField(default=0)
 	debug_only = models.BooleanField(default=True)

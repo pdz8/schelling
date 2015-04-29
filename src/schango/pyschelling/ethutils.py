@@ -128,7 +128,7 @@ def bool_from_u256(h):
 # runs regex to detect hex
 hex_detect = re.compile('^(0x)?([0-9a-fA-F])+$')
 def is_hex(h):
-	return hex_detect.match(h)
+	return isinstance(h, str) and hex_detect.match(h)
 
 # Add the 0x prefix to addresses
 def prepend0x(s):
@@ -221,7 +221,7 @@ def denom_to_wei(val, denom='ether', hex_output=False):
 		dec += ('0' * (dpow - len(dec)))
 	i = int(whole + dec)
 	if hex_output:
-		return removeL(hex(i))
+		return remove0x(removeL(hex(i)))
 	else:
 		return i
 
@@ -232,9 +232,13 @@ def wei_to_denom(val,
 		denom='ether',
 		max_dec_places=27,
 		out_decimal=False):
-	# Convert
+	# Normalize input
+	if is_hex(val):
+		val = int(val, 16)
 	sval = removeL(str(val))
 	denom = denom.lower()
+
+	# Convert
 	dec = DENOM_POW[denom] if denom in DENOM_POW else DENOM_POW['ether']
 	if len(sval) < dec + 1:
 		sval = ('0' * (dec + 1 - len(sval))) + sval
@@ -243,6 +247,8 @@ def wei_to_denom(val,
 	# Output
 	if dec > max_dec_places:
 		sval = sval[:-(dec - max_dec_places)]
+	if not max_dec_places and sval[-1] == '.':
+		sval = sval[:-1]
 	if out_decimal:
 		return decimal.Decimal(sval)
 	else:

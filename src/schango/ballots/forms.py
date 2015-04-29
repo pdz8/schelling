@@ -6,7 +6,22 @@ from django.utils import timezone
 import ballots.models as bm
 import ballots.notices as notices
 
+###############
+## Constants ##
+###############
 
+DENOM_OPTIONS = [
+	('wei', 'wei'),
+	('kwei', 'Kwei'),
+	('mwei', 'Mwei'),
+	('gwei', 'Gwei'),
+	('szabo', 'szabo'),
+	('finney', 'finney'),
+	('ether', 'ether'),
+	('grand', 'grand'),
+	('mether', 'Mether'),
+	('gether', 'Gether'),
+]
 
 ###########
 ## Forms ##
@@ -92,7 +107,7 @@ class AskForm(forms.Form):
 				'class':'form-control',
 				'style':'resize: none'}))
 	down_payment = forms.DecimalField(
-			label='Deposit (ether)',
+			label='Deposit',
 			initial=Decimal(1.5),
 			min_value=Decimal(0),
 			required=True,
@@ -102,6 +117,12 @@ class AskForm(forms.Form):
 					'class':'form-control',
 					# 'step':'0.5',
 					}))
+	denom = forms.ChoiceField(
+			label='Denomination',
+			required=True,
+			choices=DENOM_OPTIONS,
+			initial='ether',
+			widget=forms.Select(attrs={'class':'form-control'}))
 	start_time = forms.DateTimeField(
 			label='Start Time',
 			initial=timezone.now(),
@@ -127,13 +148,19 @@ class AskForm(forms.Form):
 
 class TransferForm(forms.Form):
 	transfer_amount = forms.DecimalField(
-			label='Transfer Amount (ether)',
+			label='Transfer Amount',
 			initial=Decimal(1.5),
 			min_value=Decimal(0),
 			required=True,
 			decimal_places=18,
 			max_digits=100,
 			widget=forms.NumberInput(attrs={'class':'form-control'}))
+	denom = forms.ChoiceField(
+			label='Denomination',
+			required=True,
+			choices=DENOM_OPTIONS,
+			initial='ether',
+			widget=forms.Select(attrs={'class':'form-control'}))
 	recipient = forms.CharField(
 			label='Recipient Address (hex)',
 			required=True,

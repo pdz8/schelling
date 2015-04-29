@@ -45,7 +45,8 @@ class SchellingCoin():
 
 	def transact(self, secret_key, recip_addr, ethval):
 		sender = eu.priv_to_addr(secret_key)
-		wei_ethval = eu.denom_to_wei(ethval, denom='ether', hex_output=True)
+		# wei_ethval = eu.denom_to_wei(ethval, denom='ether', hex_output=True)
+		wei_ethval = ethval
 		try:
 			self.rpc.transact(recip_addr, wei_ethval, None, None, sender=sender)
 			return True
@@ -112,7 +113,8 @@ class SchellingCoin():
 		sender = eu.priv_to_addr(secret_key)
 		nonce = secret_key + c_addr
 		nonce_hash = eu.keccak(nonce, False)
-		wei_deposit = eu.denom_to_wei(deposit, 'ether', True)
+		# wei_deposit = eu.denom_to_wei(deposit, 'ether', True)
+		wei_deposit = deposit
 		h = self.ballot.call(
 				'get_hash',
 				[sender, vote_val, nonce_hash],
@@ -180,7 +182,8 @@ class SchellingCoin():
 			question, max_option, deposit,
 			start_time, commit_period, reveal_period):
 		sender = eu.priv_to_addr(secret_key)
-		wei_deposit = eu.denom_to_wei(deposit, 'ether', True)
+		# wei_deposit = eu.denom_to_wei(deposit, 'ether', True)
+		wei_deposit = deposit
 		c = None
 		args = [
 			pool_addr,

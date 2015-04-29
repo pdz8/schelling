@@ -252,16 +252,20 @@ class Contract():
 	# Make transaction
 	def transact(self, fname, args, ethval=0, sender=None,
 			c_addr=None, is_call=False):
-		if sender:
-			sender = eu.remove_unicode(sender)
-		if c_addr:
-			c_addr = eu.remove_unicode(c_addr)
+
+		# Clean the inputs
+		ethval = eu.remove_unicode(ethval)
+		sender = eu.remove_unicode(sender)
+		c_addr = eu.remove_unicode(c_addr)
 		if not c_addr:
 			c_addr = self.c_addr
+
+		# Do transaction
 		data = Contract.abi_to_hex(self.input_types, fname, args)
 		return self.rpc.transact(
 				c_addr, ethval, None, None,
 				data=data, sender=sender, is_call=is_call)
+
 
 	# Call, check success, then transact
 	def call_then_transact(self, fname, args,

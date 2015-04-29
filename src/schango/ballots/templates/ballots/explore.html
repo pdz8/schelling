@@ -68,7 +68,7 @@ active
           </a>
         </td>
         <td>{{ b.start_time|date:"M d, Y H:i" }}</td>
-        <td>{{ b.down_payment }} ether</td>
+        <td>{{ b.down_payment|hwei_to_denom:"ether,1" }} ether</td>
       </tr>
       {% endfor %}
     </tbody>

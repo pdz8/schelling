@@ -55,19 +55,28 @@ def account(request):
 
 	# Do ether transfer
 	if 'transfer' in request.POST:
+
+		# Extract inputs
 		tf = bf.TransferForm(request.POST)
 		if not tf.is_valid() or not eu.is_addr(tf.cleaned_data['recipient']):
 			messages.error(request, "Transfer form errors")
 			return render_to_response('ballots/account.html',
 				{'f': f, 'tf': tf}, context_instance=context)
+		transfer_amount = eu.denom_to_wei(
+				tf.cleaned_data['transfer_amount'],
+				tf.cleaned_data['denom'],
+				hex_output=True)
+		recipient = tf.cleaned_data['recipient']
+
+		# Execute transaction
 		if not settings.ENABLE_ETH:
 			messages.error(request, "Ethereum not enabled")
 			return render_to_response('ballots/account.html',
 				{'f': f, 'tf': tf}, context_instance=context)
 		success = SCOIN_API.transact(
 				secret_key,
-				tf.cleaned_data['recipient'],
-				tf.cleaned_data['transfer_amount'])
+				recipient,
+				transfer_amount)
 		notices.test_success(request, success, action='transfer')
 		if not success:
 			return render_to_response('ballots/account.html',
@@ -135,7 +144,10 @@ def ask(request):
 		return render_to_response('ballots/ask.html',
 				{'f':f}, context_instance=context)
 	question = f.cleaned_data['question']
-	down_payment = f.cleaned_data['down_payment']
+	down_payment = eu.denom_to_wei(
+			f.cleaned_data['down_payment'],
+			denom=f.cleaned_data['denom'],
+			hex_output=True)
 	start_time = f.cleaned_data['start_time']
 	commit_period = f.cleaned_data['commit_period']
 	reveal_period = f.cleaned_data['reveal_period']

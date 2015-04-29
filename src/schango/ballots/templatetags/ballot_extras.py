@@ -27,3 +27,8 @@ def wei_to_denom(value, args):
 	if len(args) > 1:
 		max_dec_places = int(args[1])
 	return eu.wei_to_denom(value, denom=denom, max_dec_places=max_dec_places)
+
+@register.filter
+@stringfilter
+def hwei_to_denom(value, args):
+	return wei_to_denom(int(value, 16), args)
