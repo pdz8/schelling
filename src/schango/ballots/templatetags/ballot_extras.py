@@ -28,6 +28,9 @@ def wei_to_denom(value, args):
 		max_dec_places = int(args[1])
 	return eu.wei_to_denom(value, denom=denom, max_dec_places=max_dec_places)
 
+# Use this one for hex balance values
+# TODO: Figure out how to merge into a single filter
+#       Otherwise: represent all balances as either hex or int
 @register.filter
 @stringfilter
 def hwei_to_denom(value, args):

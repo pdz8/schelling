@@ -224,8 +224,8 @@ class SchellingCoin():
 		return eu.int_from_u256(h)
 
 	# Get account balance
-	def get_balance(self, addr):
+	def get_balance(self, addr, hex_output=False):
 		try:
-			return self.rpc.get_balance(addr)
+			return self.rpc.get_balance(addr, hex_output=hex_output)
 		except:
 			return 0

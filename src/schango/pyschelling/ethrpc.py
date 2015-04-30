@@ -47,13 +47,13 @@ class EthRpc():
 		return self.make_request(skeleton)['result']
 
 	# Get the balance at given address
-	def get_balance(self, addr):
+	def get_balance(self, addr, hex_output=False):
 		addr = prepend0x(addr)
 		skeleton = {"jsonrpc":"2.0","method":"eth_balanceAt","params":[addr],"id":1}
 		if self.version > 0.8:
 			skeleton = {"jsonrpc":"2.0","method":"eth_getBalance","params":[addr,"latest"],"id":1}
 		h = self.make_request(skeleton)['result'].encode('ascii','ignore')
-		return int(h, 16)
+		return h if hex_output else int(h, 16)
 
 	# Get full storage state
 	def get_storage(self, addr):
