@@ -75,7 +75,7 @@ active
 
   <label>Balance</label>
   <h4 class="not-hdr">
-    {{ uw.balance|wei_to_denom:"ether" }} ether
+    {{ uw.hex_balance|wei_to_denom:"ether" }} ether
   </h4>
 
   <form role="form" action="{% url 'ballots:account' %}" method="post">

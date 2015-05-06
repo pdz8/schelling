@@ -28,6 +28,7 @@ class UserWrapper():
 		self.address = ''
 		self.fb = None
 		self.balance = 0
+		self.hex_balance = '0x0'
 		self.is_registered = False
 
 		# Get user if available
@@ -48,6 +49,7 @@ class UserWrapper():
 			self.address = user.ethaccount.address
 			if call_eth and settings.ENABLE_ETH and self.address:
 				self.balance = SCOIN_API.get_balance(self.address)
+				self.hex_balance = eu.removeL(hex(self.balance))
 				if settings.VOTER_POOL_ADDRESS:
 					self.is_registered = SCOIN_API.is_voter(
 							settings.VOTER_POOL_ADDRESS,

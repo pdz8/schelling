@@ -205,6 +205,18 @@ DENOM_POW = {
 	'mether': 24,
 	'gether': 27,
 }
+POW_DENOM = {
+	0: 'wei',
+	3: 'Kwei',
+	6: 'Mwei',
+	9: 'Gwei',
+	12: 'szabo',
+	15: 'finney',
+	18: 'ether',
+	21: 'grand',
+	24: 'Mether',
+	27: 'Gether',
+}
 
 # Convert ethereum denomination to Wei
 # Avoids floating point errors

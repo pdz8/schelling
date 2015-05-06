@@ -68,7 +68,7 @@ active
           </a>
         </td>
         <td class="localize-utc-short" utc="{{ b.start_time }}"></td>
-        <td>{{ b.down_payment|hwei_to_denom:"ether,1" }} ether</td>
+        <td>{{ b.down_payment|wei_to_denom:"best,1" }} {{ b.down_payment|wei_to_denom:"best,1,name" }}</td>
       </tr>
       {% endfor %}
     </tbody>

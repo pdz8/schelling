@@ -43,7 +43,7 @@
           <li>
             <p class="navbar-text">
               <img src="{% static 'ballots/ethwhite.png' %}" height="15" width="15" style="margin-right: 3px; margin-top: -5px;">
-              <span> {{ uw.balance|wei_to_denom:"ether,2" }}</span>
+              <span> {{ uw.hex_balance|wei_to_denom:"ether,2" }}</span>
             </p>
           </li>
 
