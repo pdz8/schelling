@@ -189,9 +189,9 @@ class SchellingCoin():
 			pool_addr,
 			max_option,
 			wei_deposit,
-			datetime_to_utc(start_time),
-			commit_period * 60,
-			reveal_period * 60,
+			start_time,
+			commit_period,
+			reveal_period,
 		] + eu.str_to_string32(question, arr_len=QUESTION_ARR_LEN)
 		with en.ManagerClient(secret_key, host=self.host, port=self.man_port):
 			c = er.Contract.create(

@@ -148,9 +148,9 @@ def ask(request):
 			f.cleaned_data['down_payment'],
 			denom=f.cleaned_data['denom'],
 			hex_output=True)
-	start_time = f.cleaned_data['start_time']
-	commit_period = f.cleaned_data['commit_period']
-	reveal_period = f.cleaned_data['reveal_period']
+	start_time = ed.datetime_to_utc(f.cleaned_data['start_time'])
+	commit_period = f.cleaned_data['commit_period'] * 60
+	reveal_period = f.cleaned_data['reveal_period'] * 60
 
 	# Extract max_option from quest
 	(_, options) = bu.parse_question(question)
@@ -178,8 +178,8 @@ def ask(request):
 					{'f':f}, context_instance=context)
 
 	# Update db
-	reveal_time = start_time + datetime.timedelta(minutes=commit_period)
-	redeem_time = reveal_time + datetime.timedelta(minutes=reveal_period)
+	reveal_time = start_time + commit_period
+	redeem_time = reveal_time + reveal_period
 	b = bm.Ballot(
 			address=c_addr,
 			question=question,
@@ -221,17 +221,17 @@ def explore(request):
 		ballot_list = ballot_list.filter(
 				question__contains=f.cleaned_data['q'])
 		if not 'all' in f.cleaned_data['filter_by']:
-			dtnow = timezone.now()
+			utc_now = ed.datetime_to_utc(timezone.now())
 			if not 'unstarted' in f.cleaned_data['filter_by']:
-				ballot_list = ballot_list.exclude(start_time__gt=dtnow)
+				ballot_list = ballot_list.exclude(start_time__gt=utc_now)
 			if not 'committing' in f.cleaned_data['filter_by']:
 				ballot_list = ballot_list.exclude(
-						start_time__lte=dtnow, reveal_time__gt=dtnow)
+						start_time__lte=utc_now, reveal_time__gt=utc_now)
 			if not 'revealing' in f.cleaned_data['filter_by']:
 				ballot_list = ballot_list.exclude(
-						reveal_time__lte=dtnow, redeem_time__gt=dtnow)
+						reveal_time__lte=utc_now, redeem_time__gt=utc_now)
 			if not 'redeeming' in f.cleaned_data['filter_by']:
-				ballot_list = ballot_list.exclude(redeem_time__lte=dtnow)
+				ballot_list = ballot_list.exclude(redeem_time__lte=utc_now)
 		ballot_list = ballot_list.order_by(f.cleaned_data['sort_by'])
 
 	# Pagination
@@ -278,7 +278,7 @@ def vote(request, address=''):
 	f = ctx_dict['f'] = bf.RevealForm(options)
 
 	# Detect with phase the ballot is in
-	dt = timezone.now()
+	dt = ed.datetime_to_utc(timezone.now())
 	ctx_dict['committing'] = (dt >= b.start_time and dt < b.reveal_time)
 	ctx_dict['revealing'] = (dt >= b.reveal_time and dt < b.redeem_time)
 	ctx_dict['redeeming'] = (dt >= b.reveal_time)

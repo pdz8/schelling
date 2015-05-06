@@ -26,15 +26,14 @@ class Ballot(models.Model):
 			max_length=40)
 	question = models.CharField(
 			max_length=MAX_QUESTION_LEN)
-	start_time = models.DateTimeField()
-	reveal_time = models.DateTimeField()
-	redeem_time = models.DateTimeField()
+	# start_time = models.DateTimeField()
+	# reveal_time = models.DateTimeField()
+	# redeem_time = models.DateTimeField()
+	start_time = models.PositiveIntegerField()
+	reveal_time = models.PositiveIntegerField()
+	redeem_time = models.PositiveIntegerField()
 	down_payment = models.CharField(
 			max_length=64)
-	# down_payment = models.DecimalField(
-	# 		'Ether deposit',
-	# 		max_digits=100,
-	# 		decimal_places=18)
 	max_option = models.IntegerField()
 	decision = models.IntegerField(default=0)
 	debug_only = models.BooleanField(default=True)
