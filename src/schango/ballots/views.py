@@ -148,7 +148,7 @@ def ask(request):
 			f.cleaned_data['down_payment'],
 			denom=f.cleaned_data['denom'],
 			hex_output=True)
-	start_time = ed.datetime_to_utc(f.cleaned_data['start_time'])
+	start_time = f.cleaned_data['start_time']
 	commit_period = f.cleaned_data['commit_period'] * 60
 	reveal_period = f.cleaned_data['reveal_period'] * 60
 

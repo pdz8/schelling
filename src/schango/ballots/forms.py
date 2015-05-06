@@ -113,7 +113,7 @@ class AskForm(forms.Form):
 			required=True,
 			decimal_places=18,
 			max_digits=100,
-			widget=forms.NumberInput(attrs={
+			widget=forms.TextInput(attrs={
 					'class':'form-control',
 					# 'step':'0.5',
 					}))
@@ -123,23 +123,22 @@ class AskForm(forms.Form):
 			choices=DENOM_OPTIONS,
 			initial='ether',
 			widget=forms.Select(attrs={'class':'form-control'}))
-	start_time = forms.DateTimeField(
+	# This is in seconds
+	start_time = forms.IntegerField(
 			label='Start Time',
-			initial=timezone.now(),
-			required=True,
-			widget=forms.DateTimeInput(attrs={'class':'form-control'}))
+			required=True)
 	commit_period = forms.IntegerField(
 			label='Commit Period (minutes)',
 			initial=1440,
 			required=True,
 			min_value=1,
-			widget=forms.NumberInput(attrs={'class':'form-control'}))
+			widget=forms.TextInput(attrs={'class':'form-control'}))
 	reveal_period = forms.IntegerField(
 			label='Reveal Period (minutes)',
 			initial=1440,
 			required=True,
 			min_value=1,
-			widget=forms.NumberInput(attrs={'class':'form-control'}))
+			widget=forms.TextInput(attrs={'class':'form-control'}))
 
 	def __init__(self, *args, **kwargs):
 		kwargs.setdefault('label_suffix', '')
