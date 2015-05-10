@@ -2,6 +2,11 @@
     max-width: 800px;
 }
 
+/* Force all links to use hand cursor */
+a{
+    cursor: pointer;
+}
+
 /* Use h4 as a display for variables */
 .not-hdr{
     margin-top: 0em;
@@ -61,7 +66,9 @@ span.clear{
 .put-right{
     float: right;
 }
-
+.put-left{
+    float: left;
+}
 
 /* Poll form */
 ul.poll-form-options{

@@ -88,6 +88,7 @@ active
 {% endif %}
 </div>
 
+
 <div id="tech_panel" class="panel panel-default panel-body" hidden>
   
   <label>Contract Address</label>
@@ -120,9 +121,22 @@ active
   </div>
 
 </div>
-<a class="show-more" for="tech_panel report_option">
-  <span>Show details</span>
-  <span hidden>Hide details</span>
-</a>
+
+{# Show and hide options #}
+<div class="put-left">
+  <a class="show-more" for="tech_panel">
+    <span>Show details</span>
+    <span hidden>Hide details</span>
+  </a>
+</div>
+{% if committing or revealing %}
+  <div class="put-right">
+    <a class="show-more" for="report_option">
+      <span>Report EULA violation</span>
+      <span hidden>Report EULA violation</span>
+    </a>
+  </div>
+{% endif %}
+
 
 {% endblock %}
