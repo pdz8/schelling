@@ -23,5 +23,5 @@ urlpatterns = patterns('',
 	url(r'^debug/', ballots.views.debug, name='debug'),
 
 	# Default index
-	url(r'^$', ballots.views.explore),
+	url(r'', ballots.views.explore),
 )
