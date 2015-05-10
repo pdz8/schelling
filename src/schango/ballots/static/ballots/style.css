@@ -9,9 +9,16 @@
 }
 
 /* Change the default django radio button style */
-.dj-radio ul{
+.dj-radio ul, ul.dj-radio{
     padding: 0;
     list-style: none;
+}
+.dj-radio li{
+    margin-top: 0em;
+    margin-bottom: 0.35em;
+}
+.dj-radio h4{
+    margin: 0;
 }
 .dj-radio label{
     font-weight: inherit;

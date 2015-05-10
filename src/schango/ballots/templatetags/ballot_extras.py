@@ -15,7 +15,7 @@ register = template.Library()
 @register.filter
 @stringfilter
 def just_question(value):
-	(question, choices) = bu.parse_question(value, 1)
+	(question, choices) = bu.parse_question(value)
 	return question if question else value
 
 

@@ -1,8 +1,8 @@
-// SchellingCoin implementation designed for Schango site
+// SchellingCoin implementation designed for CrowdVerity
 // Certain aspects of the contract are centralized
 
 
-// Whitelist pool managed by Schango
+// Whitelist pool managed by CrowdVerity
 contract VoterPool {
 
     address owner;
@@ -41,6 +41,7 @@ contract VoterPool {
     function update_for(
             address old, address nu, uint256 editTime, 
             hash8 v, hash256 r, hash256 s) returns(bool success) {
+
         // Validate request
         hash256 h = sha3(address(this), old, nu, editTime);
         if (owner != ecrecover(h, v, r, s))

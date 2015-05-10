@@ -3,15 +3,18 @@
 
 # Parse question text into a list of names a values
 # e.g. The sky is blue. 1-True 2-False
-def parse_question(s, max_option=None):
+def parse_question(s, max_option=None, include_eula=True):
 	# Parse the max option if necessary
-	if not max_option:
+	if max_option:
+		if include_eula:
+			max_option -= 1
+	else:
 		max_option = 0
 		while s.find(str(max_option + 1) + '-') >= 0:
 			max_option += 1
 
 	# Validate input
-	if not max_option >= 1:
+	if not max_option > 1:
 		return (None, None)
 
 	# Extract options
@@ -22,6 +25,11 @@ def parse_question(s, max_option=None):
 			[option_text, s] = s.split(str(i + 1) + '-', 2)
 			options.append((i, option_text.strip()))
 		options.append((max_option, s.strip()))
+
+		# Append EULA option
+		if include_eula:
+			options.append((max_option+1, 'This question violates the EULA.'))
+
 		return (question_text.strip(), options)
 	except:
 		return (None, None)

@@ -6,7 +6,9 @@ $(document).ready(function(){
 
     $(".show-more").click(function(){
         $(this).children().toggle();
-        $("#" + $(this).attr("for")).toggle();
+        $(this).attr("for").split(" ").map(function(id){
+            $("#" + id).toggle();
+        });
     });
 
 
