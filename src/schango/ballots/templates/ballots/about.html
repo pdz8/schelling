@@ -1,18 +1,20 @@
 {% extends "base.html" %}
 
+
 {% block content_title %}
-About CrowdVerity
+About
 {% endblock %}
 
-{% block about_tab_class %}
-active
-{% endblock %}
 
 {% block content %}
-<h3>Why CrowdVerity?</h3>
+<h3>Purpose</h3>
 <p>
-CrowdVerity is a decentralized method for importing facts from the real-world to the crypto-world (Ethereum). Users of CrowdVerity need not trust a single central authority to tell them what is truth. There are multiple scenarios where this is necessary:
-<dl class="nice-dl">
+CrowdVerity is a crowd-powered method for importing facts from the real-world to the digital-world.
+Users of CrowdVerity need not trust a single central authority to tell them what is truth.
+They instead can query almost any fact from the the incentivized masses.
+
+Here are just a few scenarios that can benefit from CrowdVerity:
+<dl class="dl-horizontal nice-dl">
 
   <dt>Insurance</dt>
   <dd>Currently it is often the case that insurance companies determine themselves when conditions suffice to award payouts. This is a huge conflict of interest because they are the ones paying. It is no wonder why so many lawyers devote their careers to suing insurance companies.</dd>
@@ -24,13 +26,13 @@ CrowdVerity is a decentralized method for importing facts from the real-world to
   <dd>The value of currencies ought to be set by whatever value the general public believes the currency to be worth. This is most easily accomplished decentralized.</dd>
 
 </dl>
-The list is potentially infinite since CrowdVerity imposes no restriction on what category of facts can be queried. 
 </p>
 
+<span class="clear"></span>
 <hr>
-<h3>Who is CrowdVerity?</h3>
+<h3>People</h3>
 <p>
-CrowdVerity is an academic project within the Cornell University Computer Science Department. It's contributors are:
+CrowdVerity is an academic project within the Cornell University Computer Science Department. Its contributors are:
 <ul>
   <li><a href="http://peterzieske.com/">Peter Zieske</a></li>
   <li><a href="http://www.cs.cornell.edu/People/egs/">Emin Gun Sirer</a></li>
@@ -38,8 +40,18 @@ CrowdVerity is an academic project within the Cornell University Computer Scienc
 </p>
 
 <hr>
-<h3>How does CrowdVerity work?</h3>
+<h3>Technologies</h3>
+<h4>SchellingCoin</h4>
 <p>
-  Read <a href="https://blog.ethereum.org/2014/03/28/schellingcoin-a-minimal-trust-universal-data-feed/">here</a> to learn about SchellingCoin and <a href="https://ethereum.org/">here</a> to learn about Ethereum.
+CrowdVerity uses the SchellingCoin mechanism to aggregate its inputs into truth.
+Read <a href="https://blog.ethereum.org/2014/03/28/schellingcoin-a-minimal-trust-universal-data-feed/">here</a> to learn more about SchellingCoin's theory.
 </p>
+<h4>Ethereum</h4>
+<p>
+Ethereum is a Bitcoin 2.0 technology that serves as both a cryptocurrency and a platform for decentralized applications.
+Programs (contracts) running within Ethereum get all the same immutability and availability guarantees as transactions on the block-chain.
+CrowdVerity runs all of its ballots as contracts in the Ethereum platform.
+Read <a href="https://ethereum.org/">here</a> to learn more about Ethereum.
+</p>
+
 {% endblock %}

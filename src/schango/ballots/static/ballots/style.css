@@ -44,18 +44,13 @@ table a:not(btn):not(.btn).table-link:hover{
 }
 
 /* Pull dt to the left */
-.nice-dl dt{
-    float: left;
-    width: 15%;
-    margin-bottom: 1em;
-    padding-right: 1em;
-    text-align: right;
-    font-weight: bold;
-}
-.nice-dl dd{
-    float: left;
-    width: 85%;
-    margin-bottom: 1em;
+@media (min-width: 768px){
+    .nice-dl dt{
+        width: 100px;
+    }
+    .nice-dl dd{
+        margin-left: 120px;
+    }
 }
 
 /* Disable floating past a point */

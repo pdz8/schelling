@@ -30,9 +30,26 @@
         <li class="{% block ask_tab_class %}{% endblock %}">
           <a href="{% url 'ballots:ask' %}">Ask</a>
         </li>
-        <li class="{% block about_tab_class %}{% endblock %}">
-          <a href="{% url 'ballots:about' %}">About</a>
+        <li class="dropdown {% block more_tab_class %}{% endblock %}">
+          <a class="dropdown-toggle" data-toggle="dropdown">
+            More <span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu">
+            <li>
+              <a href="{% url 'ballots:about' %}">About</a>
+            </li>
+            <li>
+              <a href="{% url 'ballots:faq' %}">FAQ</a>
+            </li>
+            <li>
+              <a href="{% url 'ballots:quickstart' %}">QuickStart</a>
+            </li>
+            <li>
+              <a>EULA</a>
+            </li>
+          </ul>
         </li>
+
       </ul>
 
       {# User account buttons #}
@@ -86,6 +103,11 @@
     </div>
   {% endfor %}
 
+  {# Header #}
+  <div>
+    {% block top_matter %}{% endblock %}
+  </div>
+
   {# Main content of page #}
   <div class="panel panel-default">
     <div class="panel-heading">
@@ -97,6 +119,8 @@
       {% block content %}{% endblock %}
     </div>
   </div>
+
+  {# Put footer here #}
 
 </div>
 

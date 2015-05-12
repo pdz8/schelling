@@ -363,10 +363,14 @@ def logout(request):
 	auth.logout(request)
 	return redirect(reverse('ballots:explore'))
 
-
 def about(request):
 	return render(request, 'ballots/about.html')
 
+def faq(request):
+	return render(request, 'ballots/faq.html')
+
+def quickstart(request):
+	return render(request, 'ballots/quickstart.html')
 
 def debug(request):
 	messages.error(request, "It looks like we're doomed now. This can't be good.")

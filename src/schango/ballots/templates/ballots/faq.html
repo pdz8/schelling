@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+
+{% block content_title %}
+FAQ
+{% endblock %}
+
+
+{% block content %}
+
+<a data-toggle="collapse" data-target="#faq-vet">
+  <h4>Why would I trust people I don't know over a single authority I vet myself?</h4>
+</a>
+<div class="collapse" id="faq-vet">
+  <p>
+    We are not telling you to break your current trust relationships.
+    If you have an authority that you trust, trust them!
+    CrowdVerity is for when there are conflicts of interest or when there is no trustworthy authority already established.
+  </p>
+</div>
+
+<hr>
+<a data-toggle="collapse" data-target="#faq-two">
+  <h4>Why is voting a two-step process?</h4>
+</a>
+<div class="collapse" id="faq-two">
+  <p>
+    As a refresh, voting in CrowdVerity involves two phases:
+    <ol>
+      <li>
+        A commit phase where voters submit hashes of the vote they intend to cast.
+        The hash operates as a commitment scheme.
+        It binds the voter to the vote but keeps the value of the vote secret.
+      </li>
+      <li>
+        A reveal phase in which voters reveal what the vote they committed to.
+      </li>
+    </ol>
+    It is obvious that a reveal phase is necessary for tallying.
+    Why not just have only a reveal phase?
+    We need the commit phase so that the <a href="http://en.wikipedia.org/wiki/Focal_point_%28game_theory%29">Schelling point</a> of the ballot is the truth.
+    If voters could see previously cast votes as they decided their own vote, they'd be more likely to vote with whatever option is leading the current tally.
+    Thus a bunch of liars casting early votes of "The sky is ice cream" would succeed with getting their fib published.
+  </p>
+</div>
+
+<hr>
+<a data-toggle="collapse" data-target="#faq-cent">
+  <h4>This service is centralized! Why even involve Ethereum?</h4>
+</a>
+<div class="collapse" id="faq-cent">
+  <p>
+    We could have easily made CrowdVerity a fully decentralized app.
+    But then every user of CrowdVerity would need a full Ethereum node running on their local machine.
+    This severely limits the number of users for a service which works best with many participants.
+    Thus we put the node on our machines, allowing any device with a browser (even mobile) to use CrowdVerity.
+  </p>
+  <p>
+    CrowdVerity still retains many of the benefits of a decentralized app.
+    Specifically: the flexibility of crytocurrency and the ability to audit ballots on the block-chain.
+    We believe these are the most important perks of decentralization for a service like ours.
+  </p>
+</div>
+
+<hr>
+<a data-toggle="collapse" data-target="#faq-fb">
+  <h4>Can I login with a provider other than Facebook?</h4>
+</a>
+<div class="collapse" id="faq-fb">
+  <p>
+    Sorry, but not at this time.
+    CrowdVerity uses Facebook to obstruct ballot-stuffing <a href="http://en.wikipedia.org/wiki/Sybil_attack">Sybil attacks</a>.
+    Facebook has employees actively enforcing one-to-one correspondence between people and Facebook accounts.
+    Their results are certainly far from perfect, but so are the results of every other Sybil countermeasure.
+  </p>
+</div>
+
+<hr>
+<a data-toggle="collapse" data-target="#faq-input">
+  <h4>I have an Ethereum contract and want to use a CrowdVerity ballot as input. How do I do this?</h4>
+</a>
+<div class="collapse" id="faq-input">
+  <p>
+    Great! Enabling this sort of scenario is one of the primary purposes of CrowdVerity.
+    All CrowdVerity ballots implement the following function:
+  </p>
+  <pre>
+  function get_decision() constant returns(uint256 ret) {
+      return decision;
+  }
+  </pre>
+  <p>
+    get_decision returns the index of the option decided by votes and 0 otherwise.
+  </p>
+</div>
+
+{% endblock %}
