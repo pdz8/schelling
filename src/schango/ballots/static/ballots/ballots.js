@@ -22,7 +22,11 @@ $(document).ready(function(){
         if ($(this).hasClass("localize-utc-short")) {
             $(this).text(dt.toLocaleDateString());
         } else {
-            $(this).text(dt.toLocaleFormat());
+            try {
+                $(this).text(dt.toLocaleFormat());
+            } catch(err) {
+                $(this).text(dt.toLocaleString());
+            }
         }
     });
 });
