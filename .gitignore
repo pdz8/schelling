@@ -6,6 +6,7 @@
 *.url
 sandbox/
 *.sublime-workspace
+/README.html
 
 # Django
 *.sqlite3
