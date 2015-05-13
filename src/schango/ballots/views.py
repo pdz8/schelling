@@ -149,8 +149,8 @@ def ask(request):
 			denom=f.cleaned_data['denom'],
 			hex_output=True)
 	start_time = f.cleaned_data['start_time']
-	commit_period = f.cleaned_data['commit_period'] * 60
-	reveal_period = f.cleaned_data['reveal_period'] * 60
+	commit_period = f.cleaned_data['commit_period'] * 3600
+	reveal_period = f.cleaned_data['reveal_period'] * 3600
 
 	# Extract max_option from quest
 	(_, options) = bu.parse_question(question)

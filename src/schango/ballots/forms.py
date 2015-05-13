@@ -128,14 +128,14 @@ class AskForm(forms.Form):
 			label='Start Time',
 			required=True)
 	commit_period = forms.IntegerField(
-			label='Commit Period (minutes)',
-			initial=1440,
+			label='Commit Period (hours)',
+			initial=24,
 			required=True,
 			min_value=1,
 			widget=forms.TextInput(attrs={'class':'form-control'}))
 	reveal_period = forms.IntegerField(
-			label='Reveal Period (minutes)',
-			initial=1440,
+			label='Reveal Period (hours)',
+			initial=24,
 			required=True,
 			min_value=1,
 			widget=forms.TextInput(attrs={'class':'form-control'}))
