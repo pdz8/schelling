@@ -29,4 +29,14 @@ $(document).ready(function(){
             }
         }
     });
+
+
+    ///////////////////////
+    // Dismiss Jumbotron //
+    ///////////////////////
+
+    $(".jumbo-dismiss").click(function(){
+        $(this).closest(".jumbotron").slideUp("fast");
+    });
+
 });

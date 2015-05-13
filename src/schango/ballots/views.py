@@ -372,6 +372,9 @@ def faq(request):
 def quickstart(request):
 	return render(request, 'ballots/quickstart.html')
 
+def eula(request):
+	return render(request, 'ballots/eula.html')
+
 def debug(request):
 	messages.error(request, "It looks like we're doomed now. This can't be good.")
 	messages.warning(request, "Do ABC to prevent massive failure.")

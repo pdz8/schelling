@@ -12,6 +12,21 @@ Explore Ballots
 active
 {% endblock %}
 
+{# JUMBOTRON #}
+{% block top_matter %}
+{% if not uw.user %}
+  <div class="jumbotron">
+    <button type="button" class="close jumbo-dismiss" style="color: black;">×</button>
+    <h1>Welcome!</h1>
+    <p>New to CrowdVerity? Please visit one of the links below:</p>
+    <p>
+      <a class="btn btn-primary btn-lg" href="{% url 'ballots:about' %}">Learn more</a>
+      <a class="btn btn-primary btn-lg" href="{% url 'ballots:quickstart' %}">Get started</a>
+    </p>
+  </div>
+{% endif %}
+{% endblock %}
+
 {% block content %}
 
 {# Sort and filter #}

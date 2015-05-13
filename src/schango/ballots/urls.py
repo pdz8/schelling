@@ -16,6 +16,7 @@ urlpatterns = patterns('',
 	url(r'^about/', ballots.views.about, name='about'),
 	url(r'^faq/', ballots.views.faq, name='faq'),
 	url(r'^quickstart/', ballots.views.quickstart, name='quickstart'),
+	url(r'^eula/', ballots.views.eula, name='eula'),
 
 	# Alternatives
 	url(r'^create/', ballots.views.ask, name='create'),

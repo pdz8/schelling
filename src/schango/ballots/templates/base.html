@@ -18,7 +18,13 @@
 
 <div class="container">
 
-  <h1>CrowdVerity <small>on Ethereum</small></h1>
+  
+  <h1>
+    <a class="unstyled-link" href="{% url 'ballots:explore' %}">
+      CrowdVerity
+    </a>
+    <small>on Ethereum</small>
+  </h1>
   <nav class="navbar navbar-inverse">
     <div class="container-fluid">
 
@@ -57,7 +63,7 @@
                 <a href="{% url 'ballots:quickstart' %}">QuickStart</a>
               </li>
               <li>
-                <a>EULA</a>
+                <a href="{% url 'ballots:eula' %}">EULA</a>
               </li>
             </ul>
           </li>

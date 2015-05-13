@@ -92,3 +92,10 @@ ul.poll-form-options{
         padding-right: 0px;
     }
 }
+
+
+/* Unstyled link */
+a.unstyled-link{
+    color: inherit;
+    text-decoration: none;
+}
