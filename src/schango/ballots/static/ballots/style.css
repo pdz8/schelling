@@ -85,4 +85,10 @@ ul.poll-form-options{
     margin-bottom: 0px;
 }
 
-
+/* Remove extra navbar-collapse padding */
+@media (min-width: 768px){
+    .navbar-collapse{
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+}

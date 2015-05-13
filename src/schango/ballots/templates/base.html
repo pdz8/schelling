@@ -22,76 +22,88 @@
   <nav class="navbar navbar-inverse">
     <div class="container-fluid">
 
-      {# Navigation #}
-      <ul class="nav navbar-nav">
-        <li class="{% block explore_tab_class %}{% endblock %}">
-          <a href="{% url 'ballots:explore' %}">Explore</a>
-        </li>
-        <li class="{% block ask_tab_class %}{% endblock %}">
-          <a href="{% url 'ballots:ask' %}">Ask</a>
-        </li>
-        <li class="dropdown {% block more_tab_class %}{% endblock %}">
-          <a class="dropdown-toggle" data-toggle="dropdown">
-            More <span class="caret"></span>
-          </a>
-          <ul class="dropdown-menu">
-            <li>
-              <a href="{% url 'ballots:about' %}">About</a>
-            </li>
-            <li>
-              <a href="{% url 'ballots:faq' %}">FAQ</a>
-            </li>
-            <li>
-              <a href="{% url 'ballots:quickstart' %}">QuickStart</a>
-            </li>
-            <li>
-              <a>EULA</a>
-            </li>
-          </ul>
-        </li>
+      {# Hamburger menu #}
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bigbar">
+          <span class="sr-only">Menu</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+      </div>
 
-      </ul>
+      <div class="collapse navbar-collapse" id="bigbar">
 
-      {# User account buttons #}
-      <ul class="nav navbar-nav navbar-right">
-        {% if uw.user %}
-
-          {# Current balance #}
-          <li>
-            <p class="navbar-text">
-              <img src="{% static 'ballots/ethwhite.png' %}" height="15" width="15" style="margin-right: 3px; margin-top: -5px;">
-              <span> {{ uw.hex_balance|wei_to_denom:"ether,2" }}</span>
-            </p>
+        {# Navigation #}
+        <ul class="nav navbar-nav">
+          <li class="{% block explore_tab_class %}{% endblock %}">
+            <a href="{% url 'ballots:explore' %}">Explore</a>
           </li>
-
-          {# Account dropdown #}
-          <li class="dropdown {% block acc_tab_class %}{% endblock %}">
+          <li class="{% block ask_tab_class %}{% endblock %}">
+            <a href="{% url 'ballots:ask' %}">Ask</a>
+          </li>
+          <li class="dropdown {% block more_tab_class %}{% endblock %}">
             <a class="dropdown-toggle" data-toggle="dropdown">
-              My Account <span class="caret"></span>
+              More <span class="caret"></span>
             </a>
             <ul class="dropdown-menu">
               <li>
-                <a href="{% url 'ballots:account' %}">
-                  Profile
-                </a>
+                <a href="{% url 'ballots:about' %}">About</a>
               </li>
               <li>
-                <a href="{% url 'ballots:logout' %}">
-                  Logout
-                </a>
+                <a href="{% url 'ballots:faq' %}">FAQ</a>
+              </li>
+              <li>
+                <a href="{% url 'ballots:quickstart' %}">QuickStart</a>
+              </li>
+              <li>
+                <a>EULA</a>
               </li>
             </ul>
           </li>
+        </ul>
 
-        {% else %}
-          <li>
-            <a href="{% url 'social:begin' 'facebook' %}?next={% url 'ballots:account' %}">
-              <img src="{% static 'ballots/fbwhite.png' %}" height="15" width="15" style="margin-right: 3px; margin-top: -5px;"><span> Login</span>
-            </a>
-          </li>
-        {% endif %}
-      </ul>
+        {# User account buttons #}
+        <ul class="nav navbar-nav navbar-right">
+          {% if uw.user %}
 
+            {# Current balance #}
+            <li>
+              <p class="navbar-text">
+                <img src="{% static 'ballots/ethwhite.png' %}" height="15" width="15" style="margin-right: 3px; margin-top: -5px;">
+                <span> {{ uw.hex_balance|wei_to_denom:"ether,2" }}</span>
+              </p>
+            </li>
+
+            {# Account dropdown #}
+            <li class="dropdown {% block acc_tab_class %}{% endblock %}">
+              <a class="dropdown-toggle" data-toggle="dropdown">
+                My Account <span class="caret"></span>
+              </a>
+              <ul class="dropdown-menu">
+                <li>
+                  <a href="{% url 'ballots:account' %}">
+                    Profile
+                  </a>
+                </li>
+                <li>
+                  <a href="{% url 'ballots:logout' %}">
+                    Logout
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+          {% else %}
+            <li>
+              <a href="{% url 'social:begin' 'facebook' %}?next={% url 'ballots:account' %}">
+                <img src="{% static 'ballots/fbwhite.png' %}" height="15" width="15" style="margin-right: 3px; margin-top: -5px;"><span> Login</span>
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+
+      </div>
     </div>
   </nav>
 
