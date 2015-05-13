@@ -62,7 +62,7 @@ $(document).ready(function(){
         var s = $(this).find(" textarea.poll-form-area")[0].value;
         var i = 1;
         $(this).find(" .poll-form-options").children().each(function(){
-            s += i + "-" + $(this).find(" input")[0].value;
+            s += i + "~" + $(this).find(" input")[0].value;
             i++;
         });
         if ($(this).attr("for")) {

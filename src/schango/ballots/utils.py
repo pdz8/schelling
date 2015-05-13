@@ -10,7 +10,7 @@ def parse_question(s, max_option=None, include_eula=True):
 			max_option -= 1
 	else:
 		max_option = 0
-		while s.find(str(max_option + 1) + '-') >= 0:
+		while s.find(str(max_option + 1) + '~') >= 0:
 			max_option += 1
 
 	# Validate input
@@ -19,10 +19,10 @@ def parse_question(s, max_option=None, include_eula=True):
 
 	# Extract options
 	try:
-		[question_text, s] = s.split('1-', 2)
+		[question_text, s] = s.split('1~', 2)
 		options = []
 		for i in range(1, max_option):
-			[option_text, s] = s.split(str(i + 1) + '-', 2)
+			[option_text, s] = s.split(str(i + 1) + '~', 2)
 			options.append((i, option_text.strip()))
 		options.append((max_option, s.strip()))
 
