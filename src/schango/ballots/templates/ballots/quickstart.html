@@ -7,7 +7,96 @@ QuickStart
 
 
 {% block content %}
+<div class="expandable">
+  <a data-toggle="collapse" data-target="#qs-reg">
+    <h3>Create an account</h3>
+  </a>
+  <div class="collapse" id="qs-reg">
+    <p>
+      CrowdVerity uses <a href="https://ethereum.org/">Ethereum</a> as its backing currency and application platform.
+      Thus every CrowdVerity account requires a funded Ethereum account.
+    </p>
+    <p>Setup your CrowdVerity account as follows:</p>
+    <ol>
+      <li>
+        <a href="{% url 'social:begin' 'facebook' %}?next={% url 'ballots:account' %}">Login</a> with Facebook to get to your account <a href="{% url 'ballots:account' %}">profile</a>.
+        Here your name, Ethereum address, Ethereum balance, and registration status are displayed.
+        If it is your first time logging in, we generate a default Ethereum account. (This can be changed.)
+      </li>
+      <li>
+        New Ethereum accounts need to be registered into CrowdVerity's Ethereum voter pool.
+        Thus you will need to add funds to your account in order to pay Ethereum's gas fees.
+        This can be done by sending Ether to your address or providing the private key of an already funded account.
+        Hit "Register" to finish the process.
+        (Note: CrowdVerity does NOT charge or receive fees.)
+      </li>
+      <li>
+        Once successfully registered, the text <span class="text-success">Registered</span> should appear by your Ethereum address.
+        You're then ready to go!
+      </li>
+    </ol>
+  </div>
+</div>
 
+<hr>
+<div class="expandable">
+  <a data-toggle="collapse" data-target="#qs-vote">
+    <h3>Cast a vote</h3>
+  </a>
+  <div class="collapse" id="qs-vote">
+    <p>
+      Voting in CrowdVerity is a two-phase process (see the <a href="{% url 'ballots:faq' %}">FAQ</a> for why):
+    </p>
+    <dl class="dl-horizontal nice-dl">
+      <dt>Commit</dt>
+      <dd>
+        At the Start Time of a ballot it enters a commit phase.
+        A <i>commit</i> involves paying the deposit for a ballot and committing in secret to an option on the ballot.
+        You can perform a commit simply selecting the vote and clicking "Commit".
+      </dd>
+      <dt>Reveal</dt>
+      <dd>
+        The Reveal phase begins immediately after the Commit phase.
+        Here you reveal the vote that you previously committed to by selecting it again and clicking "Reveal".
+        This will enable the ballot to be tallied.
+      </dd>
+    </dl>
+  </div>
+</div>
 
+<hr>
+<div class="expandable">
+  <a data-toggle="collapse" data-target="#qs-ask">
+    <h3>Ask a question</h3>
+  </a>
+  <div class="collapse" id="qs-ask">
+    <p>
+      Querying the knowledge of CrowdVerity is as simple as going to the <a href="{% url 'ballots:ask' %}">ask form</a>, filling it out, and then hitting "Create Contract."
+      We briefly describe the significance of each field here:
+    </p>
+    <dl class="dl-horizontal nice-dl">
+      <dt>Question</dt>
+      <dd>
+        This is the question that will be displayed to users.
+        Be clear, concise (256 char limit), and mind the EULA when specifying your query.
+        Additional options can be added/removed their respective buttons.
+      </dd>
+      <dt>Deposit</dt>
+      <dd>
+        This is the deposit that voters pay when committing to votes and can earn back if truthful.
+        In order to create more voter incentive, this deposit is also charged from the question asker and added to the ballot's pot.
+      </dd>
+      <dt>Start Time</dt>
+      <dd>
+        The ballot opens for commits at this time.
+        In order to stay within the EULA, make sure the question being asked can be resolved to a single answer at this time.
+      </dd>
+      <dt>Commit Period</dt>
+      <dd>The length of the commit phase.</dd>
+      <dt>Reveal Period</dt>
+      <dd>The length of the reveal phase.</dd>
+    </dl>
+  </div>
+</div>
 
 {% endblock %}

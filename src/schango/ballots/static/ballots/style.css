@@ -51,6 +51,9 @@ table a:not(btn):not(.btn).table-link:hover{
     .nice-dl dd{
         margin-left: 120px;
     }
+    .nice-dl dd:not(:last-child){
+        margin-bottom: 0.5em;
+    }
 }
 
 /* Disable floating past a point */
@@ -74,7 +77,12 @@ ul.poll-form-options{
     resize: none;
 }
 
-/* Non-blue links */
-a.not-blue{
+/* Expandable */
+.expandable > a:first-child{
     color: inherit;
 }
+.expandable > div:last-child > *:last-child{
+    margin-bottom: 0px;
+}
+
+
