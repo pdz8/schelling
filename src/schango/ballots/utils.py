@@ -26,9 +26,9 @@ def parse_question(s, max_option=None, include_eula=True):
 			options.append((i, option_text.strip()))
 		options.append((max_option, s.strip()))
 
-		# Append EULA option
+		# Append ToS option
 		if include_eula:
-			options.append((max_option+1, 'This question violates the EULA.'))
+			options.append((max_option+1, 'This question violates the Terms of Service.'))
 
 		return (question_text.strip(), options)
 	except:

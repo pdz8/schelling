@@ -372,8 +372,8 @@ def faq(request):
 def quickstart(request):
 	return render(request, 'ballots/quickstart.html')
 
-def eula(request):
-	return render(request, 'ballots/eula.html')
+def tos(request):
+	return render(request, 'ballots/tos.html')
 
 def debug(request):
 	messages.error(request, "It looks like we're doomed now. This can't be good.")
