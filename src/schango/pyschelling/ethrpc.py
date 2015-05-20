@@ -9,9 +9,9 @@ import ethutils as eu
 
 
 # Defaults
-RPC_SERVER = "http://localhost:8080"
+RPC_SERVER = "http://localhost:8545"
 DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 8080
+DEFAULT_PORT = 8545
 DEFAULT_GASPRICE = 10 ** 12
 DEFAULT_STARTGAS = 10000 # ,"gas":DEFAULT_STARTGAS,"gasPrice":DEFAULT_GASPRICE
 CONSTRUCTOR_SIG = 'constructor_sig'
@@ -41,21 +41,18 @@ class EthRpc():
 
 	# Get the current block number (useful for confirmations)
 	def get_block_number(self):
-		skeleton = {"jsonrpc":"2.0","method":"eth_number","params":[],"id":83}
-		if self.version > 0.8:
-			skeleton["method"] = "eth_blockNumber"
+		skeleton = {"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":83}
 		return self.make_request(skeleton)['result']
 
 	# Get the balance at given address
 	def get_balance(self, addr, hex_output=False):
 		addr = prepend0x(addr)
-		skeleton = {"jsonrpc":"2.0","method":"eth_balanceAt","params":[addr],"id":1}
-		if self.version > 0.8:
-			skeleton = {"jsonrpc":"2.0","method":"eth_getBalance","params":[addr,"latest"],"id":1}
+		skeleton = {"jsonrpc":"2.0","method":"eth_getBalance","params":[addr,"latest"],"id":1}
 		h = self.make_request(skeleton)['result'].encode('ascii','ignore')
 		return h if hex_output else int(h, 16)
 
 	# Get full storage state
+	# IT LOOKS LIKE THIS ONE NO LONGER EXISTS
 	def get_storage(self, addr):
 		addr = prepend0x(addr)
 		skeleton = {"jsonrpc":"2.0","method":"eth_storageAt","params":[addr],"id":1}
@@ -74,9 +71,7 @@ class EthRpc():
 			index = prepend0x(index)
 		if not isinstance(index, str):
 			index = hex(index)
-		skeleton = {"jsonrpc":"2.0","method":"eth_stateAt","params":[addr,index],"id":1}
-		if self.version > 0.8:
-			skeleton = {"jsonrpc":"2.0","method":"eth_getStorageAt","params":[addr,index,"latest"],"id":1}
+		skeleton = {"jsonrpc":"2.0","method":"eth_getStorageAt","params":[addr,index,"latest"],"id":1}
 		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
 	# Do a simple call (getters)
@@ -85,6 +80,7 @@ class EthRpc():
 				data=data, sender=sender, is_call=True)
 
 	# Make transaction
+	# TODO: this interface sucks
 	def transact(self, recip, ethval, sig, args,
 			data=None, sender=None, is_call=False):
 
@@ -102,11 +98,8 @@ class EthRpc():
 		else:
 			data = ""
 
-		# Make call
-		skeleton = {"jsonrpc":"2.0","method":"eth_transact","params":[{"value":ethval,"to":recip,"data":data}],"id":1}
-		if self.version > 0.8:
-			skeleton["method"] = "eth_sendTransaction"
-			# skeleton = {"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"value":ethval,"to":recip,"data":data}],"id":1}
+		# Make transaction call
+		skeleton = {"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"value":ethval,"to":recip,"data":data}],"id":1}
 		if sender:
 			sender = prepend0x(sender)
 			skeleton["params"][0]["from"] = sender
@@ -129,9 +122,7 @@ class EthRpc():
 			code += encode_abi('', args)[2:]
 
 		# Format and send request
-		skeleton = {"jsonrpc":"2.0","method":"eth_transact","params":[{"value":ethval,"code":code}],"id":1}
-		if self.version > 0.8:
-			skeleton["method"] = "eth_sendTransaction"
+		skeleton = {"jsonrpc":"2.0","method":"eth_sendTransaction","params":[{"value":ethval,"data":code}],"id":1}
 		if sender:
 			sender = prepend0x(sender)
 			skeleton["params"][0]["from"] = sender
@@ -143,11 +134,6 @@ class EthRpc():
 		skeleton = {"jsonrpc":"2.0","method":"eth_coinbase","params":[],"id":64}
 		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
-	def set_coinbase(self, addr):
-		addr = prepend0x(addr)
-		skeleton = {"jsonrpc":"2.0","method":"eth_setCoinbase","params":[addr],"id":66}
-		self.make_request(skeleton)
-
 	def get_accounts(self):
 		skeleton = {"jsonrpc":"2.0","method":"eth_accounts","params":[],"id":1}
 		accs = self.make_request(skeleton)['result']
@@ -156,7 +142,7 @@ class EthRpc():
 		return accs
 
 	def is_mining(self):
-		skeleton = {"jsonrpc":"2.0","method":"eth_mining","params":[],"id":64}
+		skeleton = {"jsonrpc":"2.0","method":"eth_mining","params":[],"id":71}
 		return self.make_request(skeleton)['result']
 
 

@@ -24,12 +24,12 @@ if sys.platform not in ['win32','cygwin']:
 		DEFAULT_DB_PATH = os.environ['HOME'] + '/.ethereum'
 	except:
 		DEFAULT_DB_PATH = '/.ethereum'
-DEFAULT_JSON_PORT = 8080
+DEFAULT_JSON_PORT = 8545
 DEFAULT_LISTEN_PORT = 30303
 DEFAULT_REMOTE_IP = '5.1.83.225'
 DEFAULT_REMOTE_PORT = 30303
 DEFAULT_LOAD_TIME = 4 # wait for eth to startup
-DEFAULT_COINBASE = '1d6f390b1d4acfc2b8de0de51ecec83fa066f790'
+DEFAULT_COINBASE = '9f4ce1584560e3c3da570c79f9d509cf11e345cc'
 
 # Change defaults for Windows
 if sys.platform in ['win32','cygwin']:
@@ -99,6 +99,7 @@ class EthNode():
 			self.args += append_args
 		if verbosity < 4:
 			self.args += ['-v', '0']
+		self.args += ['--master', 'crowdverity']
 
 		# Start process
 		self.DEVNULL = open(os.devnull, 'wb')
@@ -189,7 +190,7 @@ class EthNode():
 		priv = eu.prepend0x(priv)
 		if not eu.is_hex(priv):
 			return False
-		cmd = 'setSecret ' + priv
+		cmd = 'setsigningkey ' + priv
 
 		# Execute
 		retval = self.input_cmd(cmd)
