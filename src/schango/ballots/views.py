@@ -282,7 +282,7 @@ def vote(request, address=''):
 	ctx_dict['committing'] = (dt >= b.start_time and dt < b.reveal_time)
 	ctx_dict['revealing'] = (dt >= b.reveal_time and dt < b.redeem_time)
 	ctx_dict['redeeming'] = (dt >= b.reveal_time)
-	ctx_dict['redeemed'] = (b.decision > 0)
+	ctx_dict['redeemed'] = (b.decision > 0 or b.is_complete)
 
 	# Display ballot with empty form
 	if request.method == 'GET':
@@ -303,21 +303,23 @@ def vote(request, address=''):
 
 	# Handle a tally
 	if 'tally' in request.POST:
+
+		# Check if ethereum enabled
 		if not settings.ENABLE_ETH or b.debug_only:
 			messages.error(request, "Cannot tally; Ethereum is disabled.")
 			return redirect('ballots:hex', address=address)
-		decision = SCOIN_API.get_decision(b.address)
-		if decision or ctx_dict['redeemed']:
+
+		# Check if decision needed
+		if ctx_dict['redeemed'] or SCOIN_API.get_is_complete(b.address):
 			messages.success(request,'Votes already tallied.')
-		elif not SCOIN_API.get_num_revealed(b.address):
-			messages.warning(request,'No votes were recorded.')
+
+		# TALLY
 		else:
-			decision = SCOIN_API.tally(uw.secret_key, b.address)
-			success = bool(decision)
-			notices.test_success(request, success, action='tally')
-		if decision:
-			b.decision = decision
+			b.is_complete = SCOIN_API.tally(uw.secret_key, b.address)
+			if is_complete:
+				b.decision = SCOIN_API.get_decision(b.address)
 			b.save()
+			notices.test_success(request, is_complete, action='tally')
 
 	# Handle vote submission
 	elif 'commit' in request.POST or 'reveal' in request.POST:
@@ -345,6 +347,9 @@ def vote(request, address=''):
 					uw.secret_key,
 					b.address,
 					vote_val)
+			if success:
+				b.num_revealers += 1
+				b.save()
 			notices.test_success(request, success, action='reveal')
 
 	# Check success

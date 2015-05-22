@@ -123,6 +123,8 @@ contract DjBallot {
         uint256 paid; // Amount of down payment paid for user
     }
     mapping (address => Participant) voterMap;
+    mapping (uint256 => address) committers;
+    uint256 numCommitted;
 
     // Array of vote revealers
     mapping (uint256 => address) revealers;
@@ -131,6 +133,7 @@ contract DjBallot {
     // Vote tallying
     mapping (uint256 => uint256) tally;
     uint256 decision;
+    bool is_complete;
 
 
     // Constructor
@@ -146,6 +149,7 @@ contract DjBallot {
         revealTime = startTime + _votingPeriod;
         redeemTime = revealTime + _revealPeriod;
         asker = tx.origin;
+        is_complete = false;
 
         // Get question
         question[0] = _q0;
@@ -184,6 +188,12 @@ contract DjBallot {
         // Update down payment
         voterMap[a].paid += msg.value;
 
+        // Record submitter
+        if (voterMap[a].h == 0x0) {
+            committers[numCommitted] = a;
+            numCommitted++;
+        }
+
         // Record hash
         voterMap[a].h = h;
         return true;
@@ -204,6 +214,12 @@ contract DjBallot {
         
         // Update down payment
         voterMap[a].paid += msg.value;
+
+        // Record submitter
+        if (voterMap[a].h == 0x0) {
+            committers[numCommitted] = a;
+            numCommitted++;
+        }
 
         // Record hash
         voterMap[a].h = h;
@@ -254,13 +270,14 @@ contract DjBallot {
 
 
     // Tally up votes and redeem winners
-    function tally_up() returns(uint256 ret) {
-
-        // Return pre-computed decision
-        if (decision != 0) return decision;
+    function tally_up() returns(bool ret) {
 
         // Check that it is redeem time
-        if (block.timestamp < redeemTime) return decision;
+        if (block.timestamp < redeemTime) return is_complete;
+
+        // Return pre-computed decision
+        if (is_complete) return is_complete;
+        is_complete = true;
 
         // Calculate the decision
         uint256 i = 1;
@@ -275,7 +292,7 @@ contract DjBallot {
         // Give funds to asker if there was no decision
         if (decision == 0) {
             asker.send(address(this).balance);
-            return decision;
+            return is_complete;
         }
 
         // Reward correct revealers
@@ -289,7 +306,7 @@ contract DjBallot {
         }
 
         // Output decision
-        return decision;
+        return is_complete;
     }
 
 
@@ -315,6 +332,12 @@ contract DjBallot {
     }
     function get_decision() constant returns(uint256 ret) {
         return decision;
+    }
+    function get_is_complete() constant returns(bool ret) {
+        return is_complete;
+    }
+    function get_num_committed() constant returns(uint256 ret) {
+        return numCommitted;
     }
     function get_num_revealed() constant returns(uint256 ret) {
         return numRevealed;

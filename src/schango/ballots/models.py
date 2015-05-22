@@ -35,8 +35,11 @@ class Ballot(models.Model):
 	down_payment = models.CharField(
 			max_length=64)
 	max_option = models.IntegerField()
+
 	decision = models.IntegerField(default=0)
 	debug_only = models.BooleanField(default=True)
+	is_complete = models.BooleanField(default=False)
+	num_revealers = models.IntegerField(default=0)
 
 	# Get string representation
 	def __str__(self):

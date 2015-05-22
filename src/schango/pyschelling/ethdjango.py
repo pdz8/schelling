@@ -148,15 +148,14 @@ class SchellingCoin():
 	# Tally up the votes
 	def tally(self, secret_key, c_addr):
 		sender = eu.priv_to_addr(secret_key)
-		decision = 0
+		is_complete = False
 		with en.ManagerClient(secret_key, host=self.host, port=self.man_port):
-			decision = self.ballot.call_then_transact(
+			is_complete = self.ballot.call_then_transact(
 					'tally_up',
 					[],
 					sender=sender,
-					c_addr=c_addr,
-					f_retval=(lambda x: eu.int_from_u256(x)))
-		return decision
+					c_addr=c_addr)
+		return is_complete
 
 
 	#######################
@@ -229,3 +228,8 @@ class SchellingCoin():
 			return self.rpc.get_balance(addr, hex_output=hex_output)
 		except:
 			return 0
+
+	# Tell whether ballot is complete
+	def get_is_complete(self, c_addr):
+		h = self.ballot.call('get_is_complete', [], c_addr=c_addr)
+		return eu.bool_from_u256(h)
