@@ -128,6 +128,7 @@ def bool_from_u256(h):
 # runs regex to detect hex
 hex_detect = re.compile('^(0x)?([0-9a-fA-F])+$')
 def is_hex(h):
+	h = remove_unicode(h)
 	return isinstance(h, str) and hex_detect.match(h)
 
 # Add the 0x prefix to addresses
