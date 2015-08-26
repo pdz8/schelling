@@ -190,8 +190,8 @@ class Contract():
 			fname = f.get('name') or CONSTRUCTOR_SIG
 			self.input_types[fname] = [a['type'] for a in f['inputs']]
 			self.input_names[fname] = [a['name'] for a in f['inputs']]
-			self.output_types[fname] = [a['type'] for a in f['outputs']]
-			self.output_names[fname] = [a['name'] for a in f['outputs']]
+			self.output_types[fname] = [a['type'] for a in f.get('outputs') or []]
+			self.output_names[fname] = [a['name'] for a in f.get('outputs') or []]
 		self.rpc = rpc
 
 	# Compute the abi data (encode_abi)
@@ -227,13 +227,14 @@ class Contract():
 
 	# Create a contract
 	@classmethod
-	def create(cls, code, args, abi, rpc, sender=None, ethval=0):
+	def create(cls, code, args, abi, rpc, sender=None, ethval=0, secret=None):
 		c = cls(abi, rpc=rpc)
 		if args:
 			if not CONSTRUCTOR_SIG in c.input_types:
 				return None
 			code += cls.abi_to_hex(c.input_types, CONSTRUCTOR_SIG, args)[8:]
-		c.c_addr = rpc.create_contract(ethval, code, args=[], sender=sender)
+		c.c_addr = rpc.create_contract(ethval, code, args=[],
+				sender=sender, secret=secret)
 		return c
 
 	# Make call
