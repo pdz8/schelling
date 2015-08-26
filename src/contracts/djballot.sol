@@ -40,10 +40,10 @@ contract VoterPool {
     // Let a non-owner update the pool (with the owner's permission)
     function update_for(
             address old, address nu, uint256 editTime, 
-            hash8 v, hash256 r, hash256 s) returns(bool success) {
+            uint8 v, bytes32 r, bytes32 s) returns(bool success) {
 
         // Validate request
-        hash256 h = sha3(address(this), old, nu, editTime);
+        bytes32 h = sha3(address(this), old, nu, editTime);
         if (owner != ecrecover(h, v, r, s))
             return false;
         if (editTime <= lastEdit[nu])
@@ -76,14 +76,14 @@ contract VoterPool {
 
     // Compute has directly from contract so there is no confusion
     function get_hash(address old, address nu, uint256 editTime)
-            constant returns(hash256 ret) {
+            constant returns(bytes32 ret) {
         return sha3(address(this), old, nu, editTime);
     }
 
 
-    ////////////////
-    // Debug only //
-    ////////////////
+    //////////////////////////////////////////
+    // VoterPool owner may kill at any time //
+    //////////////////////////////////////////
 
     function kill_me() {
         if (tx.origin != owner) return;
@@ -113,11 +113,11 @@ contract DjBallot {
 
     // TODO
     // When array support comes out allow the question string to be stored
-    string32[8] question;
+    bytes32[8] question;
 
     // List of address that have submitted hashes
     struct Participant {
-        hash256 h;
+        bytes32 h;
         uint256 choice;
         bool redeemed;
         uint256 paid; // Amount of down payment paid for user
@@ -137,8 +137,8 @@ contract DjBallot {
     function DjBallot(
             address _pool, uint256 _maxOption, uint256 _downPayment,
             uint256 _startTime, uint256 _votingPeriod, uint256 _revealPeriod,
-            string32 _q0, string32 _q1, string32 _q2, string32 _q3,
-            string32 _q4, string32 _q5, string32 _q6, string32 _q7) {
+            bytes32 _q0, bytes32 _q1, bytes32 _q2, bytes32 _q3,
+            bytes32 _q4, bytes32 _q5, bytes32 _q6, bytes32 _q7) {
         pool = _pool;
         maxOption = _maxOption;
         downPayment = _downPayment;
@@ -158,20 +158,13 @@ contract DjBallot {
         question[7] = _q7;
     }
 
-    // Signature of constructor hack
-    function constructor_sig(
-            address _pool, uint256 _maxOption, uint256 _downPayment,
-            uint256 _startTime, uint256 _votingPeriod, uint256 _revealPeriod,
-            string32 _q0, string32 _q1, string32 _q2, string32 _q3,
-            string32 _q4, string32 _q5, string32 _q6, string32 _q7) {}
-
 
     ////////////////////////
     // Instance functions //
     ////////////////////////
 
     // Submit hash for myself
-    function submit_hash(hash256 h)
+    function submit_hash(bytes32 h)
             constant returns(bool success) {
 
         // Validate input
@@ -190,7 +183,7 @@ contract DjBallot {
     }
 
     // Submit hash of vote for other account
-    function submit_hash_for(hash256 h, hash8 v, hash256 r, hash256 s)
+    function submit_hash_for(bytes32 h, uint8 v, bytes32 r, bytes32 s)
             constant returns(bool success) {
 
         // Assert correct time and voter
@@ -219,7 +212,7 @@ contract DjBallot {
 
 
     // Reveal hash value and tally the vote
-    function reveal_vote_for(address a, uint256 voteVal, hash256 nonce_hash) 
+    function reveal_vote_for(address a, uint256 voteVal, bytes32 nonce_hash) 
             constant returns(bool success) {
 
         // Validate phase and voteVal
@@ -232,7 +225,7 @@ contract DjBallot {
         if (voterMap[a].paid < downPayment) return false;
 
         // Check hash
-        hash256 h = sha3(a, address(this), voteVal, nonce_hash);
+        bytes32 h = sha3(a, address(this), voteVal, nonce_hash);
         if (voterMap[a].h != h) return false;
 
         // Check if already revealed
@@ -247,7 +240,7 @@ contract DjBallot {
         numRevealed++;
         return true;
     }
-    function reveal_hash(uint256 voteVal, hash256 nonce_hash)
+    function reveal_hash(uint256 voteVal, bytes32 nonce_hash)
             constant returns(bool success) {
         return this.reveal_vote_for(tx.origin, voteVal, nonce_hash);
     }
@@ -320,9 +313,9 @@ contract DjBallot {
         return numRevealed;
     }
     function get_question() constant returns(
-            string32 ret_q0, string32 ret_q1, string32 ret_q2,
-            string32 ret_q3, string32 ret_q4, string32 ret_q5,
-            string32 ret_q6, string32 ret_q7) {
+            bytes32 ret_q0, bytes32 ret_q1, bytes32 ret_q2,
+            bytes32 ret_q3, bytes32 ret_q4, bytes32 ret_q5,
+            bytes32 ret_q6, bytes32 ret_q7) {
         ret_q0 = question[0];
         ret_q1 = question[1];
         ret_q2 = question[2];
@@ -337,18 +330,20 @@ contract DjBallot {
     }
 
     // Compute has directly from contract so there is no confusion
-    function get_hash(address a, uint256 voteVal, hash256 nonce_hash)
-            constant returns(hash256 ret) {
+    function get_hash(address a, uint256 voteVal, bytes32 nonce_hash)
+            constant returns(bytes32 ret) {
         return sha3(a, address(this), voteVal, nonce_hash);
     }
 
 
-    ////////////////
-    // Debug only //
-    ////////////////
+    //////////////////////////////////////////
+    // VoterPool owner may kill at any time //
+    //////////////////////////////////////////
     
     function kill_me() {
-        suicide(tx.origin);
+        if (tx.origin == VoterPool(pool).get_owner()) {
+            suicide(tx.origin);
+        }
     }
 
 }

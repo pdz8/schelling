@@ -5,33 +5,9 @@
 
 ## Setup
 
-#### Ethereum
-Instructions for installing cpp-ethereum can be found [here](https://github.com/ethereum/cpp-ethereum/wiki/Installing%20Clients).
-For Ubuntu the steps are:
+#### Python dependencies
 
-```
-sudo add-apt-repository ppa:ethereum/ethereum-qt
-sudo add-apt-repository ppa:ethereum/ethereum
-sudo apt-get update
-sudo apt-get install cpp-ethereum
-```
-
-You can then check that everything is installed properly by simply running:
-
-```
-eth -h
-```
-
-#### pyschelling
-We provide the `pyschelling` package to replace the seemingly abandoned `pyethereum`.
-It contains scripts for using the Ethereum JSON RPC, creating accounts, running the Ethereum node, and directly interacting with SchellingCoin contracts.
-The package and its dependencies can be installed via:
-
-```
-python setup.py install
-```
-
-Alternatively, just install all the `pip` dependencies and interact with the package directly in `<repo root>/src/schango/pyschelling/` directory:
+The provided `pyschelling` package requires the following packages:
 
 ```
 pip install docopt
@@ -41,55 +17,59 @@ pip install pysha3
 pip install pybitcointools
 ```
 
-#### Django site
 The website for SchellingCoin is served through the Django framework. Version 1.7 is required:
 
 ```
 pip install Django
 ```
 
-Sybil attacks are prevent by require every user to register with a Facebook account. This then requires:
+We using Facebook authentication as a Sybil attack countermeasure. This requires:
 
 ```
 pip install python-social-auth
 ```
 
+#### pyethapp
+
+The Ethereum client used by the CrowdVerity server is a modified version of `pyethapp` found [here](https://github.com/pdz8/pyethapp).
+Setup is as follows:
+
+```
+git clone https://github.com/pdz8/pyethapp.git
+cd pyethapp
+python setup.py install
+```
+
+Additional help can be found in the documentation for the [original](https://github.com/ethereum/pyethapp) `pyethapp` app.
+
 
 ## Running CrowdVerity
-#### Debug
-CrowdVerity requires an Ethereum JSON-RPC node to be running in order to interact with the blockchain. Simply running `eth -j` will not work since CrowdVerity needs to be able to use different secret keys and secret keys cannot be touched via RPC.
-Thus we provide a managing server `ethnode` in the `pyschelling` package which runs `eth` as a subprocess. Become running the web-server, simply run:
 
-```
-ethnode --verbosity 0
-```
+#### pyethapp
 
-A development server can then be started via the following. Note that this configuration is open to any visitors.
+Not surprisingly, the custom Ethereum client must run in the background in order to interact with Ethereum.
+Run `pyethapp` with no arguments to view usage.
+Also refer to the [official documentation](https://github.com/ethereum/pyethapp) for the most up to date guides.
+
+#### Django
+The actually CrowdVerity site behaves like any other Django site:
 
 ```
 python manage.py runserver 0.0.0.0:8000
 ```
 
-#### Release
-The CrowdVerity production website is served by `www.systems.cs.cornell.edu` from `/var/www/crowdverity/`.
-Production settings are kept in the file `<django root>/schango/local_settings.py`. These should be set to keep the test and release instances separate.
-To properly load static files remember to run the following after every update:
+Also remember to properly load static files following every update to them:
 
 ```
 python manage.py collectstatic
 ```
 
-CrowdVerity's production node is run on `exta.systems.cs.cornell.edu`. Upstart is configured to run it:
+Settings are split between the typical `settings.py` and a `local_settings.py` which is purposely ignored from this repository.
+`local_settings.py` overrides `settings.py` with secret parameters not meant to be shared in the open git repository.
 
-```
-initctl run ethnode
-```
 
-The file `/etc/init/ethnode.conf` contains the upstart configuration. Make sure that the node is set to only accept connections from the webserver:
+<!-- The file `/etc/init/ethnode.conf` contains the upstart configuration. Make sure that the node is set to only accept connections from the webserver: -->
 
-```
-ethnode.py -A 128.253.3.221
-```
 
 ## Developing
 #### Shell
@@ -109,8 +89,17 @@ eth_address = priv_to_addr(secret_key)
 #### Interacting with Ethereum
 The `ethrpc.py` package provides many tools for interacting with Ethereum contracts and account. A subset of these are available directly from the command-line (`./ethrpc.py -h`).
 
-#### Solidity
-We have yet another Python wrapper `solctopy` within `<repo root>/src/contracts/`. This uses `solc` to compile Solidity and output the compiled code in a format easy for Python to read.
+
+#### Compiling Solidity
+The Python script `solctopy.py` within `<repo root>/src/contracts/` is used to compile Solidity scripts into a form compatible with the Django site.
+Execute the following from `<repo root>/src/contracts/` to update the compiled contracts of CrowdVerity:
+
+```
+./solctopy.py djballot.sol ../schango/pyschelling/contractbin.py
+```
+
+`solctopy.py` uses the `solc` compiler from the cpp-ethereum version of Ethereum.
+Instructions for installing cpp-ethereum can be found [here](https://github.com/ethereum/cpp-ethereum/wiki/Installing%20Clients).
 
 
 ## Schelling contracts

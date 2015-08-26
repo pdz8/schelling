@@ -82,7 +82,8 @@ class EthRpc():
 	# Make transaction
 	# TODO: this interface sucks
 	def transact(self, recip, ethval, sig, args,
-			data=None, sender=None, is_call=False):
+			data=None, sender=None, is_call=False,
+			secret=None):
 
 		# Format input
 		recip = prepend0x(recip)
@@ -103,13 +104,17 @@ class EthRpc():
 		if sender:
 			sender = prepend0x(sender)
 			skeleton["params"][0]["from"] = sender
+		if secret:
+			secret = prepend0x(secret)
+			skeleton["params"][0]["secret"] = secret
 		if is_call:
 			skeleton["method"] = "eth_call"
 		return self.make_request(skeleton)['result'].encode('ascii','ignore')
+		# return self.make_request(skeleton)
 
 
 	# Make contract
-	def create_contract(self, ethval, code, args=[], sender=None):
+	def create_contract(self, ethval, code, args=[], sender=None, secret=None):
 		
 		# Format inputs
 		if not isinstance(ethval, str):
@@ -126,6 +131,9 @@ class EthRpc():
 		if sender:
 			sender = prepend0x(sender)
 			skeleton["params"][0]["from"] = sender
+		if secret:
+			secret = prepend0x(secret)
+			skeleton["params"][0]["secret"] = secret
 		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
 
@@ -179,7 +187,7 @@ class Contract():
 		self.output_types = {}
 		self.output_names = {}
 		for f in abi:
-			fname = f['name']
+			fname = f.get('name') or CONSTRUCTOR_SIG
 			self.input_types[fname] = [a['type'] for a in f['inputs']]
 			self.input_names[fname] = [a['name'] for a in f['inputs']]
 			self.output_types[fname] = [a['type'] for a in f['outputs']]
@@ -201,7 +209,7 @@ class Contract():
 		for i in range(len(types)):
 			typ = types[i]
 			arg = eu.remove_unicode(args[i])
-			if typ in ['uint256','hash256','address'] or 'hash' in typ:
+			if typ in ['uint256','hash256','address','bytes32'] or 'uint' in typ:
 				if isinstance(arg, str):
 					retval += padzeros(arg)
 				elif isinstance(arg, int):
@@ -237,11 +245,12 @@ class Contract():
 
 	# Make transaction
 	def transact(self, fname, args, ethval=0, sender=None,
-			c_addr=None, is_call=False):
+			c_addr=None, is_call=False, secret=None):
 
 		# Clean the inputs
 		ethval = eu.remove_unicode(ethval)
 		sender = eu.remove_unicode(sender)
+		secret = eu.remove_unicode(secret)
 		c_addr = eu.remove_unicode(c_addr)
 		if not c_addr:
 			c_addr = self.c_addr
@@ -250,19 +259,21 @@ class Contract():
 		data = Contract.abi_to_hex(self.input_types, fname, args)
 		return self.rpc.transact(
 				c_addr, ethval, None, None,
-				data=data, sender=sender, is_call=is_call)
+				data=data, sender=sender, is_call=is_call, secret=secret)
 
 
 	# Call, check success, then transact
 	def call_then_transact(self, fname, args,
 			ethval=0, sender=None, c_addr=None,
 			f_success=(lambda x: eu.bool_from_u256(x)),
-			f_retval=(lambda x: eu.bool_from_u256(x))):
+			f_retval=(lambda x: eu.bool_from_u256(x)),
+			secret=None):
 		ret = self.call(fname, args, 
 				ethval=ethval, sender=sender, c_addr=c_addr)
 		if f_success(ret):
 			self.transact(fname, args,
-					ethval=ethval, sender=sender, c_addr=c_addr)
+					ethval=ethval, sender=sender, c_addr=c_addr,
+					secret=secret)
 		return f_retval(ret)
 
 
@@ -295,6 +306,7 @@ Options:
   -H --host=<host>
   -P --port=<port>
   -s --sender=<sender>
+  -S --secret=<secret>
   -d --data=<data>
 """
 if __name__ == "__main__":
@@ -307,6 +319,9 @@ if __name__ == "__main__":
 
 	# Get optional and common args
 	sender = args.get("--sender") or None
+	secret = args.get("--secret") or None
+	if secret:
+		sender = eu.priv_to_addr(secret)
 	data = args.get("--data") or None
 	params = args.get("<params>") or []
 	if params:
@@ -333,14 +348,15 @@ if __name__ == "__main__":
 	elif args['transact']:
 		r = rpc.transact(
 			args["<recip>"], try_int(args["<ethval>"]),
-			sig, params, data=data, sender=sender)
+			sig, params, data=data, sender=sender, secret=secret)
 		sys.stdout.write(str(r))
 	elif args['create_contract']:
 		r = rpc.create_contract(
 			try_int(args["<ethval>"]),
 			args["<code>"],
 			args=params,
-			sender=sender)
+			sender=sender,
+			secret=secret)
 		sys.stdout.write(str(r))
 	elif args['get_accounts']:
 		r = rpc.get_accounts()
