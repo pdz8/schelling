@@ -76,7 +76,7 @@ def account(request):
 			return render_to_response('ballots/account.html',
 				{'f': f, 'tf': tf}, context_instance=context)
 		success = SCOIN_API.transact(
-				secret_key,
+				uw.secret_key,
 				recipient,
 				transfer_amount)
 		notices.test_success(request, success, action='transfer')
