@@ -9,9 +9,9 @@ import ethutils as eu
 
 
 # Defaults
-RPC_SERVER = "http://localhost:8545"
+RPC_SERVER = "http://localhost:4000"
 DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 8545
+DEFAULT_PORT = 4000
 DEFAULT_GASPRICE = 10 ** 12
 DEFAULT_STARTGAS = 10000 # ,"gas":DEFAULT_STARTGAS,"gasPrice":DEFAULT_GASPRICE
 CONSTRUCTOR_SIG = 'constructor_sig'
@@ -37,6 +37,11 @@ class EthRpc():
 	# Get the client version
 	def get_version(self):
 		skeleton = {"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":67}
+		return self.make_request(skeleton)['result'].encode('ascii','ignore')
+
+	# Get the current gas price
+	def get_gas_price(self):
+		skeleton = {"jsonrpc":"2.0","method":"eth_gasPrice","params":[],"id":73}
 		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
 	# Get the current block number (useful for confirmations)
@@ -74,6 +79,11 @@ class EthRpc():
 		skeleton = {"jsonrpc":"2.0","method":"eth_getStorageAt","params":[addr,index,"latest"],"id":1}
 		return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
+	# Estimate gas needed for transaction
+	def estimate_gas(self, addr, sig, args, data=None, ethval=0, sender=None):
+		return self.transact(addr, ethval, sig, args,
+				data=data, sender=sender, is_estimate=True)
+
 	# Do a simple call (getters)
 	def call(self, addr, sig, args, data=None, ethval=0, sender=None):
 		return self.transact(addr, ethval, sig, args,
@@ -82,7 +92,7 @@ class EthRpc():
 	# Make transaction
 	# TODO: this interface sucks
 	def transact(self, recip, ethval, sig, args,
-			data=None, sender=None, is_call=False,
+			data=None, sender=None, is_call=False, is_estimate=False,
 			secret=None):
 
 		# Format input
@@ -109,8 +119,12 @@ class EthRpc():
 			skeleton["params"][0]["secret"] = secret
 		if is_call:
 			skeleton["method"] = "eth_call"
-		return self.make_request(skeleton)['result'].encode('ascii','ignore')
-		# return self.make_request(skeleton)
+		if is_estimate:
+			skeleton["method"] = "eth_estimateGas"
+		# skeleton["params"][0]["gas"] = hex(30400)
+		# skeleton["params"][0]["gasPrice"] = '0x9184e72a000'
+		# return self.make_request(skeleton)['result'].encode('ascii','ignore')
+		return self.make_request(skeleton)
 
 
 	# Make contract
@@ -134,7 +148,18 @@ class EthRpc():
 		if secret:
 			secret = prepend0x(secret)
 			skeleton["params"][0]["secret"] = secret
-		return self.make_request(skeleton)['result'].encode('ascii','ignore')
+		tranHash = self.make_request(skeleton)['result'].encode('ascii','ignore')
+		return tranHash
+
+		# Get address
+		# skeleton = {"jsonrpc":"2.0","method":"eth_getTransactionReceipt","params":[tranHash],"id":1}
+		# return self.make_request(skeleton)['result'].encode('ascii','ignore')
+
+	# Get the receipt of a contract
+	def get_receipt(self, transactionHash):
+		skeleton = {"jsonrpc":"2.0","method":"eth_getTransactionReceipt","params":[transactionHash],"id":1}
+		return self.make_request(skeleton)
+		# return self.make_request(skeleton)['result'].encode('ascii','ignore')
 
 
 	# Get the coinbase of the rpc server
@@ -292,15 +317,18 @@ Usage:
   ethrpc encode_abi <sig> [<params>...] [options]
   ethrpc get_version [options]
   ethrpc get_block_number [options]
+  ethrpc get_gas_price [options]
   ethrpc get_balance <addr> [options]
   ethrpc get_storage <addr> [options]
   ethrpc get_index <addr> <index> [options]
+  ethrpc estimate_gas <recip> <sig> [<params>...] [options]
   ethrpc call <recip> <sig> [<params>...] [options]
   ethrpc transact <recip> <ethval> [<sig> [<params>...]] [options]
   ethrpc create_contract <ethval> <code> [<params>...] [options]
   ethrpc get_accounts [options]
   ethrpc get_coinbase [options]
   ethrpc is_mining [options]
+  ethrpc get_receipt <transactionHash>
 
 Options:
   -h --help
@@ -331,26 +359,23 @@ if __name__ == "__main__":
 	sig = args.get("<sig>") or ""
 
 	# Switch statment
+	r = None
 	if args['encode_abi']:
 		r = encode_abi(sig, params)
-		sys.stdout.write(str(r))
 	elif args['get_balance']:
 		r = rpc.get_balance(args["<addr>"])
-		sys.stdout.write(str(r))
 	elif args['get_storage']:
 		r = rpc.get_storage(args["<addr>"])
-		sys.stdout.write(str(r))
+	elif args['estimate_gas']:
+		r = rpc.estimate_gas(args["<recip>"], sig, params, data=data)
 	elif args['call']:
 		r = rpc.call(args["<recip>"], sig, params, data=data)
-		sys.stdout.write(str(r))
 	elif args['get_index']:
 		r = rpc.get_index(args["<addr>"], try_int(args["<index>"]))
-		sys.stdout.write(str(r))
 	elif args['transact']:
 		r = rpc.transact(
 			args["<recip>"], try_int(args["<ethval>"]),
 			sig, params, data=data, sender=sender, secret=secret)
-		sys.stdout.write(str(r))
 	elif args['create_contract']:
 		r = rpc.create_contract(
 			try_int(args["<ethval>"]),
@@ -358,22 +383,21 @@ if __name__ == "__main__":
 			args=params,
 			sender=sender,
 			secret=secret)
-		sys.stdout.write(str(r))
 	elif args['get_accounts']:
 		r = rpc.get_accounts()
-		sys.stdout.write(str(r))
 	elif args['get_coinbase']:
 		r = rpc.get_coinbase()
-		sys.stdout.write(str(r))
 	elif args['get_block_number']:
 		r = rpc.get_block_number()
-		sys.stdout.write(str(r))
+	elif args['get_gas_price']:
+		r = rpc.get_gas_price()
 	elif args['get_version']:
 		r = rpc.get_version()
-		sys.stdout.write(str(r))
 	elif args['is_mining']:
 		r = rpc.is_mining()
-		sys.stdout.write(str(r))
+	elif args['get_receipt']:
+		r = rpc.get_receipt(args["<transactionHash>"])
+	sys.stdout.write(str(r))
 
 	# Add newline because exta has a terrible prompt
 	sys.stdout.write('\n')
