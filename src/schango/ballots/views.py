@@ -21,7 +21,9 @@ import ballots.utils as bu
 ## Constants ##
 ###############
 
-SCOIN_API = ed.SchellingCoin(host=settings.ETHD_HOST)
+SCOIN_API = ed.SchellingCoin(
+		host=settings.ETHD_HOST,
+		json_port=settings.ETHD_JSON_PORT)
 
 
 ##################

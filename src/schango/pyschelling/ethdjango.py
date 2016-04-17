@@ -1,6 +1,6 @@
 from datetime import datetime, time
 
-import ethnode as en
+# import ethnode as en
 import ethutils as eu
 import ethrpc as er
 import contractbin as cb
@@ -32,9 +32,10 @@ class SchellingCoin():
 	def __init__(self, 
 			host=er.DEFAULT_HOST,
 			json_port=er.DEFAULT_PORT,
-			man_port=en.MANAGER_PORT):
+			man_port=None):
+			# man_port=en.MANAGER_PORT):
 		self.host = host
-		self.man_port = man_port
+		# self.man_port = man_port
 		self.rpc = er.EthRpc(host, json_port)
 		self.pool = er.Contract(cb.abiVoterPool, rpc=self.rpc)
 		self.ballot = er.Contract(cb.abiDjBallot, rpc=self.rpc)
@@ -48,7 +49,8 @@ class SchellingCoin():
 		# wei_ethval = eu.denom_to_wei(ethval, denom='ether', hex_output=True)
 		wei_ethval = ethval
 		try:
-			self.rpc.transact(recip_addr, wei_ethval, None, None, sender=sender)
+			self.rpc.transact(recip_addr, wei_ethval, None, None,
+					sender=sender, secret=secret_key)
 			return True
 		except:
 			return False
@@ -64,19 +66,24 @@ class SchellingCoin():
 		success = False
 		if is_voter(c_addr, entry):
 			return True
-		with en.ManagerClient(secret_key, host=self.host, port=self.man_port):
+
+		try:
 			if not old:
 				success = self.pool.call_then_transact(
 						'add',
 						[entry],
 						sender=sender,
-						c_addr=c_addr)
+						c_addr=c_addr,
+						secret=secret_key)
 			else:
 				success = self.pool.call_then_transact(
 						'update',
 						[entry, old],
 						sender=sender,
-						c_addr=c_addr)
+						c_addr=c_addr,
+						secret=secret_key)
+		except:
+			pass
 		return success
 
 
@@ -99,12 +106,15 @@ class SchellingCoin():
 
 		# Send transaction
 		success = False
-		with en.ManagerClient(secret_key, host=self.host, port=self.man_port):
+		try:
 			success = self.pool.call_then_transact(
 					'update_for',
 					[old, entry, edit_utc, v, r, s],
 					sender=sender,
-					c_addr=c_addr)
+					c_addr=c_addr,
+					secret=secret_key)
+		except:
+			pass
 		return success
 
 
@@ -120,13 +130,16 @@ class SchellingCoin():
 				[sender, vote_val, nonce_hash],
 				c_addr=c_addr)
 		success = False
-		with en.ManagerClient(secret_key, host=self.host, port=self.man_port):
+		try:
 			success = self.ballot.call_then_transact(
 					'submit_hash',
 					[h],
 					sender=sender,
 					c_addr=c_addr,
-					ethval=wei_deposit)
+					ethval=wei_deposit,
+					secret=secret_key)
+		except:
+			pass
 		return success
 
 
@@ -136,26 +149,33 @@ class SchellingCoin():
 		nonce = secret_key + c_addr
 		nonce_hash = eu.keccak(nonce, False)
 		success = False
-		with en.ManagerClient(secret_key, host=self.host, port=self.man_port):
+		try:
 			success = self.ballot.call_then_transact(
 					'reveal_hash',
 					[vote_val, nonce_hash],
 					sender=sender,
-					c_addr=c_addr)
+					c_addr=c_addr,
+					secret=secret_key)
+		except:
+			pass
 		return success
 
 
 	# Tally up the votes
 	def tally(self, secret_key, c_addr):
 		sender = eu.priv_to_addr(secret_key)
-		is_complete = False
-		with en.ManagerClient(secret_key, host=self.host, port=self.man_port):
-			is_complete = self.ballot.call_then_transact(
+		decision = 0
+		try:
+			decision = self.ballot.call_then_transact(
 					'tally_up',
 					[],
 					sender=sender,
-					c_addr=c_addr)
-		return is_complete
+					c_addr=c_addr,
+					f_retval=(lambda x: eu.int_from_u256(x)),
+					secret=secret_key)
+		except:
+			pass
+		return decision
 
 
 	#######################
@@ -166,13 +186,16 @@ class SchellingCoin():
 	def create_pool(self, secret_key):
 		sender = eu.priv_to_addr(secret_key)
 		c = None
-		with en.ManagerClient(secret_key, host=self.host, port=self.man_port):
+		try:
 			c = er.Contract.create(
 					cb.binVoterPool,
 					[],
 					cb.abiVoterPool,
 					self.rpc,
-					sender=sender)
+					sender=sender,
+					secret=secret_key)
+		except:
+			pass
 		return eu.remove0x(c.c_addr) if c else ''
 
 	# Create a ballot
@@ -191,15 +214,18 @@ class SchellingCoin():
 			start_time,
 			commit_period,
 			reveal_period,
-		] + eu.str_to_string32(question, arr_len=QUESTION_ARR_LEN)
-		with en.ManagerClient(secret_key, host=self.host, port=self.man_port):
+		] + eu.str_to_u256(question, arr_len=QUESTION_ARR_LEN)
+		try:
 			c = er.Contract.create(
 					cb.binDjBallot,
 					args,
 					cb.abiDjBallot,
 					self.rpc,
 					sender=sender,
-					ethval=wei_deposit)
+					ethval=wei_deposit,
+					secret=secret_key)
+		except:
+			pass
 		return eu.remove0x(c.c_addr) if c else ''
 
 
